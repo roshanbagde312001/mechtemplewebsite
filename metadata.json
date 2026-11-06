@@ -1,0 +1,6 @@
+{
+  "name": "Build Smarter. Automate Better. Grow Faster.",
+  "description": "A cinematic, scroll-driven presentation of business software, AI and automation capabilities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
