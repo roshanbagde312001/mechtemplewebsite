@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 const ACCENT = 0xff10e8;
 const CAMERA_Z = 10;
@@ -117,7 +118,7 @@ interface ShapeItem {
 // --- Stage -------------------------------------------------------------------------------
 export interface Stage {
   render: (dt: number, time: number) => void;
-  loadRobot: (onProgress: (ratio: number) => void) => Promise<void>;
+  loadRobot: (url: string, onProgress: (ratio: number) => void) => Promise<void>;
   setPointer: (x: number, y: number) => void;
   /** Progress for a clipped full-screen scene. `null` hides it. */
   setRobot: (rect: DOMRect | null, progress: number, shot: 0 | 1) => void;
@@ -347,7 +348,8 @@ export function createStage(canvas: HTMLCanvasElement, root: HTMLElement, reduce
   const resize = () => {
     const w = window.innerWidth;
     const h = window.innerHeight;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
+    // Phones have very dense screens; capping lower keeps the 3D smooth without visible softness.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, w < 900 ? 1.3 : 1.6));
     renderer.setSize(w, h, false);
     camera.aspect = robotCamera.aspect = terrainCamera.aspect = w / h;
     camera.updateProjectionMatrix();
@@ -389,9 +391,13 @@ export function createStage(canvas: HTMLCanvasElement, root: HTMLElement, reduce
       shotFrom.fromArray(shot.lookFrom);
       shotTo.fromArray(shot.lookTo);
       lookAt.lerpVectors(shotFrom, shotTo, t);
+      // On tall screens, aim higher so the head sits below the header instead of being cut off.
+      if (camera.aspect < 1) lookAt.y += robotState.shot === 1 ? 0.2 : 0.06;
       robotCamera.lookAt(lookAt);
-      robotGroup.rotation.y = THREE.MathUtils.lerp(shot.yawFrom, shot.yawTo, t);
-      tunnel.position.z = 6 + ((t * 26) % TUNNEL_STEP) * motion;
+      // A slow idle sway and a drifting tunnel keep the scene alive between scrolls, which matters on touch screens with no pointer to follow.
+      robotGroup.rotation.y = THREE.MathUtils.lerp(shot.yawFrom, shot.yawTo, t) + Math.sin(time * 0.55) * 0.09 * motion;
+      robotGroup.position.y = Math.sin(time * 0.9) * 0.018 * motion;
+      tunnel.position.z = 6 + ((t * 26 + time * 0.9 * motion) % TUNNEL_STEP) * motion;
       drawClipped(robotScene, robotCamera, robotState.rect);
     } else {
       robotState.smooth = -1;
@@ -449,9 +455,9 @@ export function createStage(canvas: HTMLCanvasElement, root: HTMLElement, reduce
     if (anyShape) renderer.render(shapeScene, camera);
   };
 
-  const loadRobot = (onProgress: (ratio: number) => void) => new Promise<void>((resolve, reject) => {
-    new GLTFLoader().load(
-      '/models/protector_nemesis__the_fallen_seraph.glb',
+  const loadRobot = (url: string, onProgress: (ratio: number) => void) => new Promise<void>((resolve, reject) => {
+    new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).load(
+      url,
       (gltf) => {
         const bounds = new THREE.Box3().setFromObject(gltf.scene);
         const size = bounds.getSize(new THREE.Vector3());

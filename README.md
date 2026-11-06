@@ -34,7 +34,9 @@ Update `--accent` and `--accent-rgb` in `src/index.css`, and `ACCENT` in `src/si
 
 ## 3D model
 
-`public/models/protector_nemesis__the_fallen_seraph.glb` is about 19.5 MB. It loads after the page appears, and only on screens at least 900px wide with a hardware GPU. Other devices see the stills in `public/assets/posters`. Add `?model=1` to the URL to force it on.
+`public/models/protector_nemesis__the_fallen_seraph.glb` (about 19.5 MB) is used on large screens with a mouse. Phones, tablets and windows under 900px wide load `public/models/robot-mobile.glb` (about 1 MB), a simplified copy made with `gltf-transform optimize --compress meshopt --texture-compress webp --texture-size 1024 --simplify-ratio 0.25 --simplify-error 0.002`. Re-run that if the main model changes.
+
+Both load after the page appears. The stills in `public/assets/posters` show until then, and stay on devices with data saver on, 2 GB of memory or less, or no hardware GPU. Add `?model=1` to the URL to force the 3D on.
 
 ## Stock media
 

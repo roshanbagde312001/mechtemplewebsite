@@ -425,7 +425,8 @@ main { position: relative; z-index: 2; }
   .orbiter--2 { bottom: 6%; left: 3%; }
   .orbiter--3 { right: 3%; bottom: 12%; }
   .orbiter--4 { display: none; }
-  .depth__signals { top: 116px; right: 16px; left: 16px; display: flex; flex-wrap: wrap; transform: none; }
+  .depth .pin__inner::before { position: absolute; right: 0; bottom: 0; left: 0; height: 46%; background: linear-gradient(0deg, rgba(0, 0, 0, 0.82), transparent); content: ''; }
+  .depth__signals { top: auto; right: 16px; bottom: 25%; left: 16px; display: flex; flex-wrap: wrap; justify-content: center; transform: none; }
   .depth__signals li { padding: 4px 9px; font-size: 0.64rem; }
   .services__inner { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); align-items: stretch; align-content: stretch; gap: 12px; padding: 70px var(--gutter) 14px; }
   .services__left .t-h2 { font-size: clamp(1.5rem, 7vw, 2.4rem); margin: 6px 0 10px; }

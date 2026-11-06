@@ -516,7 +516,7 @@ export function initMotion(root: HTMLElement): () => void {
     });
   }
 
-  // --- Robot asset: heavy, so it loads after first paint, on capable devices only ---------
+  // --- Robot asset: loads after first paint. Small or touch screens get the light model. ---
   const softwareGl = (() => {
     if (!stage) return true;
     const gl = canvas.getContext('webgl2');
@@ -524,13 +524,22 @@ export function initMotion(root: HTMLElement): () => void {
     return !info || /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(String(gl!.getParameter(info.UNMASKED_RENDERER_WEBGL)));
   })();
   const forceModel = new URLSearchParams(window.location.search).has('model');
+  const device = navigator as Navigator & { connection?: { saveData?: boolean }; deviceMemory?: number };
+  const lowEnd = device.connection?.saveData === true || (device.deviceMemory ?? 8) <= 2;
+  const lightModel = window.innerWidth < 900 || !finePointer;
+  const robotUrl = lightModel ? '/models/robot-mobile.glb' : '/models/protector_nemesis__the_fallen_seraph.glb';
   const robotTimer = window.setTimeout(() => {
-    if (!stage || (!forceModel && (softwareGl || window.innerWidth < 900))) return;
-    stage.loadRobot((ratio) => root.style.setProperty('--robot-load', String(ratio)))
+    if (!stage || (!forceModel && (softwareGl || lowEnd))) return;
+    stage.loadRobot(robotUrl, (ratio) => root.style.setProperty('--robot-load', String(ratio)))
       .then(() => root.classList.add('robot-ready'))
       .catch((error) => console.error('Robot model failed to load; keeping the still image.', error));
   }, 1400);
   cleanups.push(() => window.clearTimeout(robotTimer));
+
+  // If a phone runs out of graphics memory the browser drops the 3D canvas; bring the still image back rather than show black.
+  const onContextLost = (event: Event) => { event.preventDefault(); root.classList.remove('robot-ready'); };
+  canvas.addEventListener('webglcontextlost', onContextLost);
+  cleanups.push(() => canvas.removeEventListener('webglcontextlost', onContextLost));
 
   // --- Loop --------------------------------------------------------------------------------
   let frameId = 0;
