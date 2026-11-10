@@ -4,6 +4,8 @@
 
 export const BRAND = 'Preemptech';
 export const MONOGRAM = 'PT';
+/** Brand logo (cropped from public/assets/aistudio/Preemptech Logo Premium.png). */
+export const LOGO = '/assets/brand/logo.webp';
 export const TAGLINE = 'Engineering what comes next.';
 export const EMAIL = 'athravasonone7@gmail.com';
 export const MAILTO = `mailto:${EMAIL}?subject=Let%27s%20build%20together`;
@@ -42,16 +44,16 @@ export const PROBLEMS = ['Too many spreadsheets', 'Manually maintained records',
 
 export const WORKFLOW = ['Trigger', 'Input', 'Validation', 'Processing', 'Decision', 'Routing', 'Action', 'Notification', 'Monitoring'];
 
-// Core service categories. Shape index maps to stage.ts MORPH_ORDER (0-5).
+// Core service categories. Images are Pexels stock (see public/assets/stock/CREDITS.md). Shape index maps to stage.ts MORPH_ORDER (0-5).
 export const CAPABILITIES = [
-  { title: 'AI & Machine Learning', description: 'AI assistants, chatbots, document intelligence and predictive models, used where AI solves a genuine problem.', items: ['AI assistants', 'Intelligent chatbots', 'Document processing', 'Forecasting', 'Recommendations'], shape: 0 },
-  { title: 'Software Development', description: 'Custom software engineered around specific operational requirements, not generic tools.', items: ['Custom business apps', 'Internal systems', 'Enterprise modules', 'Modernization'], shape: 1 },
-  { title: 'Intelligent Automation', description: 'Reliable, maintainable workflows that replace unnecessary repetitive manual processes.', items: ['Lead management', 'Approvals', 'Notifications', 'Data movement'], shape: 2 },
-  { title: 'Data Engineering & Analytics', description: 'Collect, process, organize and understand data through pipelines, dashboards and analysis.', items: ['Data pipelines', 'ETL / ELT', 'KPI dashboards', 'Trend analysis'], shape: 3 },
-  { title: 'Mobile & Web Applications', description: 'Websites, web applications and mobile apps with real business capabilities behind them.', items: ['Business websites', 'E-commerce', 'Web apps', 'Android / iOS'], shape: 4 },
-  { title: 'System Integration & APIs', description: 'Connect applications, services and databases so information moves between systems.', items: ['REST APIs', 'Third-party integrations', 'Payments', 'CRM / ERP'], shape: 5 },
-  { title: 'Cloud & Deployment', description: 'Take applications from development to production, then keep them running.', items: ['VPS & cloud', 'Docker', 'Domains & hosting', 'Backups'], shape: 0 },
-  { title: 'Technology Consulting', description: 'Identify the actual problem, decide whether technology can solve it, and plan a suitable implementation.', items: ['Requirement analysis', 'Architecture planning', 'Technology selection'], shape: 1 },
+  { title: 'AI & Machine Learning', image: '/assets/capabilities/cap-ai.jpg', description: 'AI assistants, chatbots, document intelligence and predictive models, used where AI solves a genuine problem.', items: ['AI assistants', 'Intelligent chatbots', 'Document processing', 'Forecasting', 'Recommendations'], shape: 0 },
+  { title: 'Software Development', image: '/assets/capabilities/cap-software.jpg', description: 'Custom software engineered around specific operational requirements, not generic tools.', items: ['Custom business apps', 'Internal systems', 'Enterprise modules', 'Modernization'], shape: 1 },
+  { title: 'Intelligent Automation', image: '/assets/capabilities/cap-automation.jpg', description: 'Reliable, maintainable workflows that replace unnecessary repetitive manual processes.', items: ['Lead management', 'Approvals', 'Notifications', 'Data movement'], shape: 2 },
+  { title: 'Data Engineering & Analytics', image: '/assets/capabilities/cap-data.jpg', description: 'Collect, process, organize and understand data through pipelines, dashboards and analysis.', items: ['Data pipelines', 'ETL / ELT', 'KPI dashboards', 'Trend analysis'], shape: 3 },
+  { title: 'Mobile & Web Applications', image: '/assets/capabilities/cap-apps.jpg', description: 'Websites, web applications and mobile apps with real business capabilities behind them.', items: ['Business websites', 'E-commerce', 'Web apps', 'Android / iOS'], shape: 4 },
+  { title: 'System Integration & APIs', image: '/assets/capabilities/cap-integration.jpg', description: 'Connect applications, services and databases so information moves between systems.', items: ['REST APIs', 'Third-party integrations', 'Payments', 'CRM / ERP'], shape: 5 },
+  { title: 'Cloud & Deployment', image: '/assets/capabilities/cap-cloud.jpg', description: 'Take applications from development to production, then keep them running.', items: ['VPS & cloud', 'Docker', 'Domains & hosting', 'Backups'], shape: 0 },
+  { title: 'Technology Consulting', image: '/assets/capabilities/cap-consulting.jpg', description: 'Identify the actual problem, decide whether technology can solve it, and plan a suitable implementation.', items: ['Requirement analysis', 'Architecture planning', 'Technology selection'], shape: 1 },
 ];
 
 // The four areas the business operates across.

@@ -302,6 +302,7 @@ export function initMotion(root: HTMLElement): () => void {
   if (services) {
     const rows = $$('[data-service-row]', services);
     const panels = $$('[data-service-panel]', services);
+    const photos = $$('[data-service-photo]', services);
     const number = services.querySelector<HTMLElement>('[data-service-number]');
     const shape = services.querySelector<HTMLElement>('[data-service-shape]');
     let active = -1;
@@ -310,6 +311,7 @@ export function initMotion(root: HTMLElement): () => void {
       active = index;
       rows.forEach((row, i) => row.classList.toggle('is-active', i === index));
       panels.forEach((panel, i) => panel.classList.toggle('is-active', i === index));
+      photos.forEach((photo, i) => photo.classList.toggle('is-active', i === index));
       if (number) number.textContent = String(index + 1).padStart(2, '0');
       if (shape) shape.dataset.morph = panels[index]?.dataset.shapeIndex ?? '0';
     };

@@ -3,7 +3,7 @@ import { ArrowUpRight, Boxes, Briefcase, Building2, Factory, GraduationCap, Plus
 import { initMotion, scrollToId } from './motion';
 import {
   AREAS, BRAND, BRAND_STATEMENT, CAPABILITIES, CUSTOMERS_B2B, CUSTOMERS_B2C, DIFFERENTIATORS, ECOSYSTEM, EMAIL, ENGAGEMENT, FACTS, FOUNDER, INDUSTRIES,
-  INDUSTRY_PHOTOS, INTERSECTION, JOURNEY, JOURNEY_PHOTOS, LEAD_LINES, LEAD_STEPS, LIFECYCLE, MAILTO, MARQUEE, MONOGRAM, NAV_LINKS, OUTCOMES, PHILOSOPHY,
+  INDUSTRY_PHOTOS, INTERSECTION, JOURNEY, JOURNEY_PHOTOS, LEAD_LINES, LEAD_STEPS, LIFECYCLE, LOGO, MAILTO, MARQUEE, MONOGRAM, NAV_LINKS, OUTCOMES, PHILOSOPHY,
   PROBLEMS, PROJECTS, QUESTIONS, REEL, ROTATING_WORDS, SERVICES, SHORT_DESCRIPTION, SOLUTIONS, SUPPORTING, TAGLINE, WORKFLOW,
 } from './content';
 
@@ -84,7 +84,7 @@ function Preloader({ onDone }: { onDone: () => void }) {
   if (state === 'gone') return null;
   return (
     <div className={`loader ${state === 'leave' ? 'loader--leave' : ''}`} aria-hidden="true">
-      <span className="loader__brand">{MONOGRAM}</span>
+      <img className="loader__brand" src={LOGO} alt="" />
       <span className="loader__count" ref={counter}>000</span>
       <span className="loader__bar"><span ref={bar} /></span>
     </div>
@@ -313,7 +313,7 @@ export function Site() {
 
       <header className="nav" data-nav>
         <button type="button" className="nav__logo" onClick={() => scrollToId('top')} aria-label={`${BRAND}, back to top`}>
-          <b>{MONOGRAM}</b><span>{BRAND}<br />AI · Software</span>
+          <img src={LOGO} alt={BRAND} width={1000} height={494} />
         </button>
         <div className="nav__right">
           <span className="nav__status"><i />{TAGLINE}</span>
@@ -328,7 +328,7 @@ export function Site() {
       <main id="main">
         {/* Hero */}
         <section className="hero" id="top" data-hero aria-labelledby="hero-title">
-          <div className="hero__bg" aria-hidden="true"><img src="/assets/hero/hero-robot.jpg" alt="" fetchPriority="high" /></div>
+          <div className="hero__bg" aria-hidden="true"><img src="/assets/hero/hero-circuit.jpg" alt="" fetchPriority="high" /></div>
           <div className="hero__glow" data-hero-glow aria-hidden="true" />
           <div className="hero__copy">
             <h1 className="hero__title" id="hero-title" aria-label={TAGLINE}>
@@ -342,7 +342,7 @@ export function Site() {
               <Pill variant="ghost" onClick={() => scrollToId('services')}>Explore services</Pill>
             </div>
           </div>
-          {/* The robot background art replaces the 3D shape here; data-hidden keeps the stage from drawing it. */}
+          {/* The background art replaces the 3D shape here; data-hidden keeps the stage from drawing it. */}
           <div className="hero__shape" data-shape="morph" data-hero-shape data-hidden="1" aria-hidden="true" />
           <p className="hero__foot"><span className="label">Scroll</span><span className="label">AI · Software · Automation · Data</span></p>
         </section>
@@ -404,8 +404,12 @@ export function Site() {
               </ol>
             </div>
             <div className="services__card">
+              <div className="services__photos" aria-hidden="true">
+                {CAPABILITIES.map((group, i) => <img key={group.title} src={group.image} alt="" loading={i === 0 ? 'eager' : 'lazy'} data-service-photo />)}
+              </div>
               <span className="services__number" data-service-number aria-hidden="true">01</span>
-              <div className="services__shape" data-shape="morph" data-service-shape data-drag aria-hidden="true" />
+              {/* Photos replace the 3D shape in this card; data-hidden keeps the stage from drawing it. */}
+              <div className="services__shape" data-shape="morph" data-service-shape data-hidden="1" aria-hidden="true" />
               <div className="services__panels">
                 {CAPABILITIES.map((group) => (
                   <div className="services__panel" key={group.title} data-service-panel data-shape-index={group.shape}>
@@ -697,7 +701,10 @@ export function Site() {
       <footer className="foot">
         <div className="foot__planet" aria-hidden="true" />
         <div className="foot__top">
-          <p className="foot__title"><span>{BRAND}.</span><span>{TAGLINE}</span></p>
+          <div className="foot__brand">
+            <img className="foot__logo" src={LOGO} alt={BRAND} loading="lazy" />
+            <p className="foot__title"><span>{TAGLINE}</span></p>
+          </div>
           <Pill href={MAILTO}>Let's talk</Pill>
         </div>
         <div className="foot__cols">

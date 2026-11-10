@@ -11,3 +11,9 @@ reel-traffic.mp4 10433645 | reel-servers.mp4 7140928 | reel-code.mp4 13522186
 industry-education 37852096 | industry-services 7698712 | industry-retail 5531542 | industry-ecommerce 4487383 | industry-realestate 40431415 | industry-healthcare 36101264 | industry-finance 16594725 | industry-manufacturing 16544056 | industry-startups 16323454
 stage-discovery 7693692 | stage-strategy 7414216 | stage-design 3277808 | stage-development 6804068 | stage-automation 34222005 | stage-testing 17489156 | stage-deployment 4508751 | stage-support 12903168
 project-edupilot 17081979 | project-citytwin 6307433 | project-salonsphere 9146943
+
+## Hero
+hero/hero-circuit.jpg 1448561 (file lives in public/assets/hero)
+
+## Capabilities (public/assets/capabilities)
+cap-ai 8294625 | cap-software 546819 | cap-automation 34207359 | cap-data 12969403 | cap-apps 32665242 | cap-integration 8386440 | cap-cloud 1148820 | cap-consulting 3183183
