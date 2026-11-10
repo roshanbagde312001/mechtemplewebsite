@@ -328,6 +328,7 @@ export function Site() {
       <main id="main">
         {/* Hero */}
         <section className="hero" id="top" data-hero aria-labelledby="hero-title">
+          <div className="hero__bg" aria-hidden="true"><img src="/assets/hero/hero-robot.jpg" alt="" fetchPriority="high" /></div>
           <div className="hero__glow" data-hero-glow aria-hidden="true" />
           <div className="hero__copy">
             <h1 className="hero__title" id="hero-title" aria-label={TAGLINE}>
@@ -341,7 +342,8 @@ export function Site() {
               <Pill variant="ghost" onClick={() => scrollToId('services')}>Explore services</Pill>
             </div>
           </div>
-          <div className="hero__shape" data-shape="morph" data-hero-shape data-drag aria-hidden="true" />
+          {/* The robot background art replaces the 3D shape here; data-hidden keeps the stage from drawing it. */}
+          <div className="hero__shape" data-shape="morph" data-hero-shape data-hidden="1" aria-hidden="true" />
           <p className="hero__foot"><span className="label">Scroll</span><span className="label">AI · Software · Automation · Data</span></p>
         </section>
 

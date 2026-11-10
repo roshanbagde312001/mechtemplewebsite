@@ -139,8 +139,8 @@ export function initMotion(root: HTMLElement): () => void {
         }
         const twinkle = 0.65 + 0.35 * Math.sin(time * 1.6 + p.phase);
         const alpha = (0.18 + p.depth * 0.7) * twinkle;
-        particleContext.fillStyle = p.red ? `rgba(255,42,42,${alpha})` : `rgba(255,235,235,${alpha * 0.8})`;
-        if (p.red && p.depth > 0.45) { particleContext.shadowColor = 'rgba(255,42,42,0.9)'; particleContext.shadowBlur = 10 * p.depth; } else { particleContext.shadowBlur = 0; }
+        particleContext.fillStyle = p.red ? `rgba(255,0,51,${alpha})` : `rgba(255,235,235,${alpha * 0.8})`;
+        if (p.red && p.depth > 0.45) { particleContext.shadowColor = 'rgba(255,0,51,0.9)'; particleContext.shadowBlur = 10 * p.depth; } else { particleContext.shadowBlur = 0; }
         particleContext.beginPath();
         particleContext.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         particleContext.fill();
@@ -206,8 +206,10 @@ export function initMotion(root: HTMLElement): () => void {
   }
   if (heroGlow && finePointer) {
     listen('pointermove', (event) => {
-      heroGlow.style.setProperty('--gx', `${(event.clientX / window.innerWidth) * 100}%`);
-      heroGlow.style.setProperty('--gy', `${(event.clientY / window.innerHeight) * 100}%`);
+      // Set on the hero section so both the glow and the background image follow the pointer.
+      const target = heroGlow.parentElement ?? heroGlow;
+      target.style.setProperty('--gx', `${(event.clientX / window.innerWidth) * 100}%`);
+      target.style.setProperty('--gy', `${(event.clientY / window.innerHeight) * 100}%`);
     }, { passive: true });
   }
 

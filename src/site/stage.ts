@@ -5,7 +5,9 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
-const ACCENT = 0xff2a2a;
+const ACCENT = 0xff0033;
+/** Humanoid finish: metallic silver that picks up red reflections. */
+const ROBOT_SILVER = 0xc0c0c0;
 const CAMERA_Z = 10;
 const FOV = 30;
 
@@ -79,7 +81,7 @@ function createMorphGeometry(): THREE.BufferGeometry {
   return geometry;
 }
 
-function createEnvironment(renderer: THREE.WebGLRenderer): THREE.Texture {
+function createEnvironment(renderer: THREE.WebGLRenderer, redReflections = false): THREE.Texture {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x030304);
   const panel = (color: number, power: number, w: number, h: number, pos: number[], look = [0, 0, 0]) => {
@@ -100,6 +102,13 @@ function createEnvironment(renderer: THREE.WebGLRenderer): THREE.Texture {
   panel(0xffffff, 2.2, 8, 8, [8, 4, -6]);
   panel(ACCENT, 4, 20, 7, [0, -8, 3]);
   panel(ACCENT, 1.5, 5, 8, [9, -3, 6]);
+  if (redReflections) {
+    // Narrow red strips at the sides and back: red edge reflections, while front faces keep reflecting white (silver).
+    panel(ACCENT, 3, 1.4, 14, [10, 2, 1]);
+    panel(ACCENT, 2, 1.2, 12, [-10, 3, -3]);
+    panel(ACCENT, 2.5, 8, 1.2, [0, 9, -6]);
+    panel(0xffffff, 3, 10, 6, [0, 3, 13]);
+  }
   const pmrem = new THREE.PMREMGenerator(renderer);
   const texture = pmrem.fromScene(scene, 0).texture;
   pmrem.dispose();
@@ -211,19 +220,22 @@ export function createStage(canvas: HTMLCanvasElement, root: HTMLElement, reduce
 
   // --- Robot tunnel ----------------------------------------------------------------------
   const robotScene = new THREE.Scene();
-  robotScene.environment = environment;
-  robotScene.environmentIntensity = 0.5;
+  const robotEnvironment = createEnvironment(renderer, true);
+  robotScene.environment = robotEnvironment;
+  robotScene.environmentIntensity = 0.95;
   robotScene.fog = new THREE.FogExp2(0x000000, 0.06);
   const robotCamera = new THREE.PerspectiveCamera(36, 1, 0.05, 90);
   const robotGroup = new THREE.Group();
   robotScene.add(robotGroup);
-  const key = new THREE.DirectionalLight(0xffffff, 0.7);
+  const key = new THREE.DirectionalLight(0xffffff, 1.1);
   key.position.set(-2, 5, 4);
-  const rimA = new THREE.PointLight(ACCENT, 34, 12);
+  const rimA = new THREE.PointLight(ACCENT, 30, 12);
   rimA.position.set(2.6, 2.6, -1.5);
-  const rimB = new THREE.PointLight(0xffffff, 26, 10);
+  const rimB = new THREE.PointLight(0xffffff, 22, 10);
   rimB.position.set(-2.8, 3.2, -1);
-  robotScene.add(key, rimA, rimB);
+  const redSide = new THREE.PointLight(ACCENT, 9, 8);
+  redSide.position.set(-2.6, 1.6, 0.6);
+  robotScene.add(key, rimA, rimB, redSide);
 
   const TUNNEL_STEP = 2.4;
   const TUNNEL_ROWS = 24;
@@ -465,13 +477,20 @@ export function createStage(canvas: HTMLCanvasElement, root: HTMLElement, reduce
         const scale = 2.8 / size.y;
         gltf.scene.scale.setScalar(scale);
         gltf.scene.position.set(-center.x * scale, -bounds.min.y * scale, -center.z * scale);
-        // Push the supplied armour toward polished metal so it sits with the chrome shapes.
+        // Recolour the armour to polished silver; its mirror finish then reflects the red environment and lights.
+        const silver = new THREE.Color(ROBOT_SILVER);
         gltf.scene.traverse((child) => {
           if (!(child instanceof THREE.Mesh)) return;
           for (const material of Array.isArray(child.material) ? child.material : [child.material]) {
             if (material instanceof THREE.MeshStandardMaterial) {
-              material.metalness = Math.max(material.metalness, 0.82);
-              material.roughness = Math.min(material.roughness, 0.34);
+              material.map = null; // drop the original paint so the silver is uniform; normal/roughness detail stays
+              material.color.copy(silver);
+              material.metalness = 1;
+              material.roughness = Math.min(material.roughness, 0.24);
+              material.envMapIntensity = 1.2;
+              // Only mapped glow details (eyes, light strips) glow red; the armour itself must not.
+              material.emissive.set(material.emissiveMap ? ACCENT : 0x000000);
+              material.needsUpdate = true;
             }
           }
         });
@@ -504,6 +523,7 @@ export function createStage(canvas: HTMLCanvasElement, root: HTMLElement, reduce
       disposeScene(robotScene);
       disposeScene(terrainScene);
       environment.dispose();
+      robotEnvironment.dispose();
       renderer.dispose();
     },
   };
