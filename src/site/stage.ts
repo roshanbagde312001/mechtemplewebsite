@@ -5,7 +5,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
-const ACCENT = 0xff10e8;
+const ACCENT = 0xff2a2a;
 const CAMERA_Z = 10;
 const FOV = 30;
 
@@ -306,7 +306,7 @@ export function createStage(canvas: HTMLCanvasElement, root: HTMLElement, reduce
         float halo = smoothstep(.34, .0, ribbon) * .28;
         float hot = smoothstep(.016, .0, ribbon);
         float distanceFade = smoothstep(120., 4., -vPos.y + 62.);
-        vec3 base = mix(vec3(.012,.002,.012), uAccent * .15, smoothstep(.0, 9., vH));
+        vec3 base = mix(vec3(.014,.002,.002), uAccent * .15, smoothstep(.0, 9., vH));
         vec3 col = base + uAccent * (line + halo) + vec3(1.) * hot * .85;
         float fog = smoothstep(62., 18., vPos.y);
         col = mix(uAccent * .3, col, fog);

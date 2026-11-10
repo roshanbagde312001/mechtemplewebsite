@@ -76,7 +76,7 @@ export function initMotion(root: HTMLElement): () => void {
     });
   }
 
-  // --- Velocity, progress line, starfield streaks ---------------------------------------
+  // --- Velocity, progress line, particle field ---------------------------------------
   let lastY = window.scrollY;
   let velocity = 0;
   const progressBar = root.querySelector<HTMLElement>('[data-progress]');
@@ -89,44 +89,63 @@ export function initMotion(root: HTMLElement): () => void {
     nav?.classList.toggle('nav--scrolled', y > 40);
   });
 
-  const streakCanvas = root.querySelector<HTMLCanvasElement>('[data-streaks]');
-  const streakContext = streakCanvas?.getContext('2d');
-  if (streakCanvas && streakContext) {
-    type Streak = { x: number; y: number; length: number; depth: number; pink: boolean };
-    let streaks: Streak[] = [];
+  // Particle field: soft dots drifting upward, stretched by scroll speed and nudged away from the pointer.
+  const particleCanvas = root.querySelector<HTMLCanvasElement>('[data-particles]');
+  const particleContext = particleCanvas?.getContext('2d');
+  if (particleCanvas && particleContext) {
+    type Particle = { x: number; y: number; r: number; depth: number; red: boolean; phase: number; vx: number; vy: number };
+    let particles: Particle[] = [];
+    const pointer = { x: -9999, y: -9999 };
+    listen('pointermove', (event) => { pointer.x = event.clientX; pointer.y = event.clientY; }, { passive: true });
     const setup = () => {
       const dpr = Math.min(window.devicePixelRatio, 1.5);
-      streakCanvas.width = window.innerWidth * dpr;
-      streakCanvas.height = window.innerHeight * dpr;
-      streakContext.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = Math.round((window.innerWidth * window.innerHeight) / 7600);
-      streaks = Array.from({ length: count }, () => {
-        const depth = Math.pow(Math.random(), 2.2);
-        return { x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, depth, pink: Math.random() < 0.09, length: 5 + depth * 56 };
+      particleCanvas.width = window.innerWidth * dpr;
+      particleCanvas.height = window.innerHeight * dpr;
+      particleContext.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const count = Math.min(220, Math.round((window.innerWidth * window.innerHeight) / 9000));
+      particles = Array.from({ length: count }, () => {
+        const depth = Math.pow(Math.random(), 1.8);
+        return { x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, depth, red: Math.random() < 0.28, phase: Math.random() * Math.PI * 2, r: 0.6 + depth * 2.2, vx: 0, vy: 0 };
       });
     };
     setup();
     listen('resize', setup);
+    let time = 0;
     frames.push((dt) => {
       const w = window.innerWidth;
       const h = window.innerHeight;
-      streakContext.clearRect(0, 0, w, h);
-      streakContext.lineWidth = 1;
-      for (const streak of streaks) {
+      time += dt;
+      particleContext.clearRect(0, 0, w, h);
+      for (const p of particles) {
         if (!reduced) {
-          streak.x -= (5 + streak.depth * 26) * dt;
-          streak.y -= velocity * dt * (0.14 + streak.depth * 0.5);
-          if (streak.x + streak.length < 0) streak.x = w;
-          if (streak.y < 0) streak.y += h;
-          if (streak.y > h) streak.y -= h;
+          // Drift up and sway, with scroll velocity adding parallax by depth.
+          p.y -= (6 + p.depth * 18) * dt + velocity * dt * (0.08 + p.depth * 0.35);
+          p.x += Math.sin(time * 0.6 + p.phase) * (4 + p.depth * 8) * dt;
+          const dx = p.x - pointer.x;
+          const dy = p.y - pointer.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < 140 * 140 && d2 > 0.01) {
+            const force = (1 - Math.sqrt(d2) / 140) * 90 * (0.4 + p.depth);
+            const d = Math.sqrt(d2);
+            p.vx += (dx / d) * force * dt;
+            p.vy += (dy / d) * force * dt;
+          }
+          p.vx *= 0.94; p.vy *= 0.94;
+          p.x += p.vx; p.y += p.vy;
+          if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
+          if (p.y > h + 10) { p.y = -10; p.x = Math.random() * w; }
+          if (p.x < -10) p.x = w + 10;
+          if (p.x > w + 10) p.x = -10;
         }
-        const stretch = streak.length * (1 + Math.min(Math.abs(velocity) / 2600, 1.4) * streak.depth);
-        streakContext.strokeStyle = streak.pink ? `rgba(255,16,232,${0.3 + streak.depth * 0.6})` : `rgba(255,255,255,${0.1 + streak.depth * 0.75})`;
-        streakContext.beginPath();
-        streakContext.moveTo(streak.x, streak.y + 0.5);
-        streakContext.lineTo(streak.x + stretch, streak.y + 0.5);
-        streakContext.stroke();
+        const twinkle = 0.65 + 0.35 * Math.sin(time * 1.6 + p.phase);
+        const alpha = (0.18 + p.depth * 0.7) * twinkle;
+        particleContext.fillStyle = p.red ? `rgba(255,42,42,${alpha})` : `rgba(255,235,235,${alpha * 0.8})`;
+        if (p.red && p.depth > 0.45) { particleContext.shadowColor = 'rgba(255,42,42,0.9)'; particleContext.shadowBlur = 10 * p.depth; } else { particleContext.shadowBlur = 0; }
+        particleContext.beginPath();
+        particleContext.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        particleContext.fill();
       }
+      particleContext.shadowBlur = 0;
     });
   }
 
