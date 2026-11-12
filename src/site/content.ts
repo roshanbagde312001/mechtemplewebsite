@@ -7,7 +7,7 @@ export const MONOGRAM = 'PT';
 /** Brand logo (cropped from public/assets/aistudio/Preemptech Logo Premium.png). */
 export const LOGO = '/assets/brand/logo.webp';
 export const TAGLINE = 'Engineering what comes next.';
-export const EMAIL = 'athravasonone7@gmail.com';
+export const EMAIL = 'contact@primptech.com';
 export const MAILTO = `mailto:${EMAIL}?subject=Let%27s%20build%20together`;
 
 export const SHORT_DESCRIPTION = `${BRAND} is an AI, software engineering and automation company that designs and develops intelligent digital solutions for businesses and consumers.`;
@@ -292,6 +292,7 @@ export const OUTCOMES = [
 
 export const FOUNDER = {
   name: 'Sanket Sonone',
+  photo: '/assets/team/sanket-sonone.jpg',
   role: 'Founder',
   focus: 'Technical direction, solution architecture, software engineering, AI implementation, data-related development and deployment.',
   expertise: ['Software Development', 'Artificial Intelligence', 'Machine Learning', 'Data Analysis', 'Data Science', 'Application Development', 'Backend & Deployment Engineering'],

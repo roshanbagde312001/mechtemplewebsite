@@ -79,7 +79,7 @@ export function AboutPage() {
 
       <Block label="Leadership" title="The team behind the work">
         <div className="founder glass" data-rv>
-          <div className="founder__mark" aria-hidden="true">{FOUNDER.name.split(' ').map((part) => part[0]).join('')}</div>
+          <figure className="founder__photo"><img src={FOUNDER.photo} alt={`${FOUNDER.name}, ${FOUNDER.role}`} width={400} height={400} loading="lazy" decoding="async" /></figure>
           <div>
             <p className="label">{FOUNDER.role}</p>
             <h3>{FOUNDER.name}</h3>
