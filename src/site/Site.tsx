@@ -1,58 +1,25 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Boxes, Briefcase, Building2, Factory, GraduationCap, Plus, Rocket, Store, Users, X } from 'lucide-react';
 import { initMotion, scrollToId } from './motion';
+import { Link } from './router';
+import { SiteFooter, SiteHeader, SiteMenu } from './chrome';
+import { Label, Pill, Rise, pad, usePageMeta } from './ui';
 import {
-  AREAS, BRAND, BRAND_STATEMENT, CAPABILITIES, CUSTOMERS_B2B, CUSTOMERS_B2C, DIFFERENTIATORS, ECOSYSTEM, EMAIL, ENGAGEMENT, FACTS, FOUNDER, INDUSTRIES,
-  INDUSTRY_PHOTOS, INTERSECTION, JOURNEY, JOURNEY_PHOTOS, LEAD_LINES, LEAD_STEPS, LIFECYCLE, LOGO, MAILTO, MARQUEE, MONOGRAM, NAV_LINKS, OUTCOMES, PHILOSOPHY,
-  PROBLEMS, PROJECTS, QUESTIONS, REEL, ROTATING_WORDS, SERVICES, SHORT_DESCRIPTION, SOLUTIONS, SUPPORTING, TAGLINE, WORKFLOW,
+  AREAS, BRAND, BRAND_STATEMENT, CAPABILITIES, CUSTOMERS_B2B, CUSTOMERS_B2C, DIFFERENTIATORS, ECOSYSTEM, ENGAGEMENT, FACTS, FOUNDER, INDUSTRIES, INDUSTRY_PHOTOS, INTERSECTION, JOURNEY, JOURNEY_PHOTOS, LEAD_LINES, LEAD_STEPS, LIFECYCLE, LOGO, MARQUEE, MONOGRAM, OUTCOMES, PHILOSOPHY, PROBLEMS, PROJECTS, QUESTIONS, REEL, ROTATING_WORDS, SERVICES, SHORT_DESCRIPTION, SOLUTIONS, SUPPORTING, TAGLINE, WORKFLOW, serviceSlug,
 } from './content';
 
 const INDUSTRY_ICONS = [Building2, GraduationCap, Store, Users, Briefcase, Factory, Rocket];
-const pad = (value: number) => String(value).padStart(2, '0');
 
-/** Headline whose words rise from behind a mask as it enters view. */
-function Rise({ text, as: Tag = 'h2', className = '', id }: { text: string; as?: 'h1' | 'h2' | 'h3' | 'p'; className?: string; id?: string }) {
-  const lines = text.split('\n');
-  let index = 0;
-  return (
-    <Tag className={`rise ${className}`} id={id} data-h aria-label={text.replace('\n', ' ')}>
-      {lines.map((line, lineIndex) => (
-        <span className="rise__line" key={lineIndex} aria-hidden="true">
-          {line.split(' ').map((word, wordIndex) => (
-            <span className="rise__mask" key={wordIndex}>
-              <span className="rise__word" style={{ transitionDelay: `${index++ * 55}ms` }}>{word}</span>
-            </span>
-          ))}
-        </span>
-      ))}
-    </Tag>
-  );
-}
-
-/** Pill button: the label rolls on hover and the whole button leans toward the pointer. */
-function Pill({ children, href, onClick, variant = 'solid' }: { children: string; href?: string; onClick?: () => void; variant?: 'solid' | 'ghost' | 'light' }) {
-  const inner = (
-    <>
-      <span className="pill__roll"><span>{children}</span><span aria-hidden="true">{children}</span></span>
-      <span className="pill__icon"><ArrowUpRight size={14} /></span>
-    </>
-  );
-  const className = `pill pill--${variant}`;
-  if (href) return <a className={className} href={href} data-magnetic>{inner}</a>;
-  return <button type="button" className={className} onClick={onClick} data-magnetic>{inner}</button>;
-}
-
-function Label({ children, className = '' }: { children: string; className?: string }) {
-  return <p className={`label ${className}`} data-scramble>{children}</p>;
-}
+let introPlayed = false;
 
 function Preloader({ onDone }: { onDone: () => void }) {
-  const [state, setState] = useState<'run' | 'leave' | 'gone'>('run');
+  const [state, setState] = useState<'run' | 'leave' | 'gone'>(introPlayed ? 'gone' : 'run');
   const counter = useRef<HTMLSpanElement>(null);
   const bar = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setState('gone'); onDone(); return; }
+    if (introPlayed || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setState('gone'); onDone(); return; }
+    introPlayed = true;
     document.documentElement.classList.add('scroll-lock');
     let frame = 0;
     let fontsReady = false;
@@ -87,32 +54,6 @@ function Preloader({ onDone }: { onDone: () => void }) {
       <img className="loader__brand" src={LOGO} alt="" />
       <span className="loader__count" ref={counter}>000</span>
       <span className="loader__bar"><span ref={bar} /></span>
-    </div>
-  );
-}
-
-function Menu({ open, onClose, onGo }: { open: boolean; onClose: () => void; onGo: (id: string) => void }) {
-  const closeButton = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    document.documentElement.classList.toggle('scroll-lock', open);
-    if (!open) return;
-    closeButton.current?.focus();
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
-
-  return (
-    <div className={`menu ${open ? 'menu--open' : ''}`} role="dialog" aria-modal="true" aria-label="Site menu" inert={!open}>
-      <button ref={closeButton} className="menu__close" type="button" onClick={onClose}>Close <X size={15} /></button>
-      <nav className="menu__list" aria-label="All sections">
-        {NAV_LINKS.map((link, index) => (
-          <button type="button" key={link.target} style={{ transitionDelay: open ? `${80 + index * 45}ms` : '0ms' }} onClick={() => onGo(link.target)}>
-            <small>{pad(index + 1)}</small><span>{link.label}</span><ArrowUpRight size={26} />
-          </button>
-        ))}
-      </nav>
-      <p className="menu__foot"><a href={MAILTO}>{EMAIL}</a><span>AI · Software · Automation</span></p>
     </div>
   );
 }
@@ -204,6 +145,7 @@ function ServiceDialog({ index, onClose }: { index: number | null; onClose: () =
           </div>
         ))}
         {service.note && <p className="dialog__note">{service.note}</p>}
+        <div className="hero__cta"><Pill to={`/services/${serviceSlug(index)}`}>Full service details</Pill><Pill to="/contact" variant="ghost">Discuss this service</Pill></div>
       </section>
     </div>
   );
@@ -281,6 +223,7 @@ function Questions() {
 }
 
 export function Site() {
+  usePageMeta('', `${BRAND} is an AI, software engineering and automation company. We design, develop, integrate, automate and deploy software and intelligent systems.`);
   const root = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -290,7 +233,6 @@ export function Site() {
   const markReady = useCallback(() => setReady(true), []);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
   const closeProject = useCallback(() => setProject(null), []);
-  const go = useCallback((id: string) => { setMenuOpen(false); requestAnimationFrame(() => scrollToId(id)); }, []);
 
   useEffect(() => {
     window.history.scrollRestoration = 'manual';
@@ -311,17 +253,8 @@ export function Site() {
       <span className="progress" data-progress aria-hidden="true" />
       <div className="cursor" data-cursor-el aria-hidden="true"><span data-cursor-label /></div>
 
-      <header className="nav" data-nav>
-        <button type="button" className="nav__logo" onClick={() => scrollToId('top')} aria-label={`${BRAND}, back to top`}>
-          <img src={LOGO} alt={BRAND} width={1000} height={494} />
-        </button>
-        <div className="nav__right">
-          <span className="nav__status"><i />{TAGLINE}</span>
-          <Pill href={MAILTO} variant="light">Let's talk</Pill>
-          <button type="button" className="nav__menu" onClick={() => setMenuOpen(true)} aria-haspopup="dialog">Menu <span aria-hidden="true"><i /><i /></span></button>
-        </div>
-      </header>
-      <Menu open={menuOpen} onClose={closeMenu} onGo={go} />
+      <SiteHeader path="/" onMenu={() => setMenuOpen(true)} onHome={() => scrollToId('top')} />
+      <SiteMenu open={menuOpen} onClose={closeMenu} path="/" />
       <ProjectDialog index={project} onClose={closeProject} />
       <ServiceDialog index={service} onClose={closeService} />
 
@@ -338,8 +271,8 @@ export function Site() {
             </h1>
             <p className="hero__sub glass"><span>{SUPPORTING}</span></p>
             <div className="hero__cta">
-              <Pill href={MAILTO}>Start a conversation</Pill>
-              <Pill variant="ghost" onClick={() => scrollToId('services')}>Explore services</Pill>
+              <Pill to="/contact">Start a conversation</Pill>
+              <Pill variant="ghost" to="/services">Explore services</Pill>
             </div>
           </div>
           {/* The background art replaces the 3D shape here; data-hidden keeps the stage from drawing it. */}
@@ -385,6 +318,7 @@ export function Site() {
               <ol className="about__list">{INTERSECTION.map((item, i) => <li key={item}><small>{pad(i + 1)}</small>{item}</li>)}</ol>
             </div>
           </div>
+          <div className="section__more" data-rv><Pill variant="ghost" to="/about">More about us</Pill></div>
         </section>
 
         <Depth shot={0} id="depth-a" figure="Fig. 01 · The challenge" title="Work should move forward." caption="Not get stuck in spreadsheets and disconnected systems" signals={PROBLEMS} poster="/assets/posters/fig-01.jpg" />
@@ -446,7 +380,7 @@ export function Site() {
               <Label>Complete service catalog</Label>
               <Rise text={'Twelve services.\nBuilt to connect.'} id="catalog-title" className="t-h1" />
             </div>
-            <p className="label">Open a service for the full scope</p>
+            <Pill variant="ghost" to="/services">All services</Pill>
           </div>
           <ul className="catalog__grid" data-spot>
             {SERVICES.map((item, i) => (
@@ -519,6 +453,7 @@ export function Site() {
               </article>
             ))}
           </div>
+          <div className="section__more" data-rv><Pill variant="ghost" to="/solutions">Explore all solutions</Pill></div>
         </section>
 
         {/* Work */}
@@ -527,7 +462,7 @@ export function Site() {
             <div className="work__head">
               <Label>Products and projects</Label>
               <h2 className="sr-only" id="work-title">A closer look at selected work</h2>
-              <p className="label work__hint">Open a project to see its purpose</p>
+              <Link className="label work__hint" to="/work">All work →</Link>
             </div>
             <div className="work__view">
               <div className="work__track" data-work-track>
@@ -577,6 +512,7 @@ export function Site() {
               <ul className="chips">{CUSTOMERS_B2C.map((item) => <li key={item}>{item}</li>)}</ul>
             </article>
           </div>
+          <div className="section__more" data-rv><Pill variant="ghost" to="/industries">Industries we serve</Pill></div>
         </section>
 
         {/* Industries */}
@@ -608,6 +544,7 @@ export function Site() {
               </li>
             ))}
           </ol>
+          <div className="section__more" data-rv><Pill variant="ghost" to="/process">See how we work</Pill></div>
         </section>
 
         {/* Warp */}
@@ -677,7 +614,7 @@ export function Site() {
             <Label>Illustrative example</Label>
             <Rise text={'Automated lead\nmanagement, in motion.'} id="platform-title" className="t-h2" />
             <p>This fictional example illustrates a process, not a client result or deployment claim. Step through it to watch an inquiry move from website form to reporting.</p>
-            <div className="hero__cta"><Pill href={MAILTO}>Start a conversation</Pill></div>
+            <div className="hero__cta"><Pill to="/contact">Start a conversation</Pill></div>
           </div>
           <LeadDemo />
         </section>
@@ -691,30 +628,14 @@ export function Site() {
             <Rise text={'What should we\nbuild together?'} id="closing-title" className="closing__title" />
             <p data-rv>{SUPPORTING} Start a conversation about the problem you want to solve.</p>
             <div className="hero__cta" data-rv>
-              <Pill href={MAILTO}>Start a conversation</Pill>
-              <Pill variant="ghost" onClick={() => scrollToId('top')}>Back to the beginning</Pill>
+              <Pill to="/contact">Start a conversation</Pill>
+              <Pill variant="ghost" to="/services">Explore our services</Pill>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="foot">
-        <div className="foot__planet" aria-hidden="true" />
-        <div className="foot__top">
-          <div className="foot__brand">
-            <img className="foot__logo" src={LOGO} alt={BRAND} loading="lazy" />
-            <p className="foot__title"><span>{TAGLINE}</span></p>
-          </div>
-          <Pill href={MAILTO}>Let's talk</Pill>
-        </div>
-        <div className="foot__cols">
-          <div><h2>Company</h2><p>Founded by {FOUNDER.name}.<br />AI, software engineering and automation.</p></div>
-          <div><h2>Explore</h2>{NAV_LINKS.slice(0, 4).map((link) => <button type="button" key={link.target} onClick={() => scrollToId(link.target)}>{link.label}</button>)}</div>
-          <div><h2>More</h2>{NAV_LINKS.slice(4).map((link) => <button type="button" key={link.target} onClick={() => scrollToId(link.target)}>{link.label}</button>)}</div>
-          <div><h2>Contact</h2><a href={MAILTO}>{EMAIL}</a></div>
-        </div>
-        <p className="foot__base"><span>© {new Date().getFullYear()} {BRAND}</span><span>Stock photography and footage: Pexels</span><span>AI · Software · Automation</span></p>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

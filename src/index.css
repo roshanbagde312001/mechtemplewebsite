@@ -129,9 +129,9 @@ main { position: relative; z-index: 2; }
 .menu--open { clip-path: inset(0); visibility: visible; transition: clip-path 0.85s var(--inout); }
 .menu__close { position: absolute; top: 22px; right: var(--gutter); display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
 .menu__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); column-gap: 40px; }
-.menu__list button { display: flex; align-items: center; gap: 16px; width: 100%; padding: clamp(10px, 1.6vh, 20px) 0; border-bottom: 1px solid var(--line); font-family: var(--display); font-size: clamp(1.7rem, 3.6vw, 3.1rem); font-weight: 700; letter-spacing: -0.045em; opacity: 0; transform: translateY(36px); transition: opacity 0.6s, transform 0.9s var(--expo), color 0.25s; }
-.menu--open .menu__list button { opacity: 1; transform: none; }
-.menu__list button:hover { color: var(--accent); }
+.menu__list a { display: flex; align-items: center; gap: 16px; width: 100%; padding: clamp(10px, 1.6vh, 20px) 0; border-bottom: 1px solid var(--line); font-family: var(--display); font-size: clamp(1.7rem, 3.6vw, 3.1rem); font-weight: 700; letter-spacing: -0.045em; opacity: 0; transform: translateY(36px); transition: opacity 0.6s, transform 0.9s var(--expo), color 0.25s; }
+.menu--open .menu__list a { opacity: 1; transform: none; }
+.menu__list a:hover, .menu__list a.is-active { color: var(--accent); }
 .menu__list small { width: 26px; color: var(--accent); font-family: var(--body); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; }
 .menu__list span { flex: 1; }
 .menu__foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-top: 30px; color: var(--muted); font-size: 0.8rem; }
@@ -595,3 +595,38 @@ main { position: relative; z-index: 2; }
 .reduced .foot { margin-top: 0; }
 .reduced .particles { opacity: 0.6; }
 @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; } }
+
+/* Performance on phones and touch screens: live backdrop blur over animated canvases recomposites every frame and was a
+   main source of stutter. Swap it for solid tinted panels, which read almost identically on this dark design. */
+@media (hover: none), (max-width: 900px) {
+  *, *::before, *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  .glass { background: linear-gradient(150deg, rgba(42, 14, 17, 0.94), rgba(14, 5, 7, 0.94)); }
+  .nav--scrolled { background: rgba(8, 2, 3, 0.94); }
+  .menu { background: radial-gradient(ellipse at 80% 110%, rgba(var(--accent-rgb), 0.45), transparent 58%), #060001; }
+  .dialog { background: rgba(0, 0, 0, 0.88); }
+  .dialog__panel { background: radial-gradient(ellipse at 50% 120%, rgba(var(--accent-rgb), 0.3), transparent 62%), #0c0405; }
+  .browser { background: #0c0405; }
+  .depth__signals li { background: rgba(0, 0, 0, 0.78); }
+  .hero__bg img { animation: none; }
+}
+
+/* ---------- Multi-page chrome (shared by home and inner pages) ---------- */
+.boot { min-height: 100vh; background: #000; }
+.nav__links { display: none; align-items: center; gap: clamp(14px, 1.6vw, 28px); }
+.nav__links a { position: relative; color: rgba(255, 255, 255, 0.78); font-size: 0.86rem; transition: color 0.25s; }
+.nav__links a::after { position: absolute; right: 0; bottom: -6px; left: 0; height: 2px; border-radius: 2px; background: var(--accent); transform: scaleX(0); transition: transform 0.4s var(--expo); content: ''; }
+.nav__links a:hover, .nav__links a.is-active { color: #fff; }
+.nav__links a:hover::after, .nav__links a.is-active::after { transform: scaleX(1); }
+@media (min-width: 1100px) {
+  .nav__links { display: flex; }
+  .nav__menu { display: none; }
+}
+.menu__list a small { width: 26px; color: var(--accent); font-family: var(--body); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; }
+.menu__list a span { flex: 1; }
+.section__more { display: flex; justify-content: flex-start; margin-top: clamp(26px, 4vw, 44px); }
+a.work__hint:hover { color: #fff; }
+.foot--inner { margin-top: clamp(60px, 8vw, 120px); min-height: 0; }
+.foot--inner .foot__planet { opacity: 0.45; }
+.foot__cols .foot__more { margin-top: 6px; color: #ffb0a8; }
+.foot__legal { display: inline-flex; gap: 18px; }
+.foot__legal a:hover { color: #fff; }

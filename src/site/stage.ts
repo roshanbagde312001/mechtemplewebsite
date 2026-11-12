@@ -127,7 +127,10 @@ interface ShapeItem {
 // --- Stage -------------------------------------------------------------------------------
 export interface Stage {
   render: (dt: number, time: number) => void;
-  loadRobot: (url: string, onProgress: (ratio: number) => void) => Promise<void>;
+  /** `lite` drops the costlier material layers (clearcoat) for phones and slow GPUs. */
+  loadRobot: (url: string, onProgress: (ratio: number) => void, lite?: boolean) => Promise<void>;
+  /** Scales the render resolution (1 = full). Lowered automatically when frames run slow. */
+  setQuality: (scale: number) => void;
   setPointer: (x: number, y: number) => void;
   /** Progress for a clipped full-screen scene. `null` hides it. */
   setRobot: (rect: DOMRect | null, progress: number, shot: 0 | 1) => void;
@@ -220,8 +223,8 @@ export function createStage(canvas: HTMLCanvasElement, root: HTMLElement, reduce
 
   // --- Robot tunnel ----------------------------------------------------------------------
   const robotScene = new THREE.Scene();
-  const robotEnvironment = createEnvironment(renderer, true);
-  robotScene.environment = robotEnvironment;
+  // Built on first robot load, not at start-up: one less environment bake before the first frame.
+  let robotEnvironment: THREE.Texture | null = null;
   robotScene.environmentIntensity = 0.95;
   robotScene.fog = new THREE.FogExp2(0x000000, 0.06);
   const robotCamera = new THREE.PerspectiveCamera(36, 1, 0.05, 90);
@@ -357,11 +360,13 @@ export function createStage(canvas: HTMLCanvasElement, root: HTMLElement, reduce
   const smoothPointer = new THREE.Vector2();
   const influences = new Array(MORPH_ORDER.length).fill(0);
 
+  let quality = 1;
   const resize = () => {
     const w = window.innerWidth;
     const h = window.innerHeight;
     // Phones have very dense screens; capping lower keeps the 3D smooth without visible softness.
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, w < 900 ? 1.3 : 1.6));
+    // `quality` drops further when the frame-time monitor in motion.ts sees sustained slow frames.
+    renderer.setPixelRatio(Math.max(0.6, Math.min(window.devicePixelRatio, w < 900 ? 1.2 : 1.6) * quality));
     renderer.setSize(w, h, false);
     camera.aspect = robotCamera.aspect = terrainCamera.aspect = w / h;
     camera.updateProjectionMatrix();
@@ -467,10 +472,14 @@ export function createStage(canvas: HTMLCanvasElement, root: HTMLElement, reduce
     if (anyShape) renderer.render(shapeScene, camera);
   };
 
-  const loadRobot = (url: string, onProgress: (ratio: number) => void) => new Promise<void>((resolve, reject) => {
+  const loadRobot = (url: string, onProgress: (ratio: number) => void, lite = false) => new Promise<void>((resolve, reject) => {
     new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).load(
       url,
-      (gltf) => {
+      async (gltf) => {
+        if (!robotEnvironment) {
+          robotEnvironment = createEnvironment(renderer, true);
+          robotScene.environment = robotEnvironment;
+        }
         const bounds = new THREE.Box3().setFromObject(gltf.scene);
         const size = bounds.getSize(new THREE.Vector3());
         const center = bounds.getCenter(new THREE.Vector3());
@@ -490,12 +499,30 @@ export function createStage(canvas: HTMLCanvasElement, root: HTMLElement, reduce
               material.envMapIntensity = 1.2;
               // Only mapped glow details (eyes, light strips) glow red; the armour itself must not.
               material.emissive.set(material.emissiveMap ? ACCENT : 0x000000);
+              if (material instanceof THREE.MeshPhysicalMaterial) {
+                // Transmission makes three.js render the whole scene a second time every frame; solid silver does not need it.
+                material.transmission = 0;
+                material.transparent = false;
+                material.opacity = 1;
+                if (lite) material.clearcoat = 0;
+              }
               material.needsUpdate = true;
             }
           }
         });
-        robotGroup.add(gltf.scene);
-        resolve();
+        try {
+          // Compile the shaders off the critical path, then draw once into a 1px scissor so geometry is uploaded
+          // now, while the visitor is still in the hero, instead of as a freeze when the robot section scrolls in.
+          await renderer.compileAsync(gltf.scene, robotCamera, robotScene);
+          robotGroup.add(gltf.scene);
+          renderer.setScissorTest(true);
+          renderer.setScissor(0, 0, 1, 1);
+          renderer.render(robotScene, robotCamera);
+          renderer.setScissorTest(false);
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
       },
       (event) => { if (event.total) onProgress(event.loaded / event.total); },
       reject,
@@ -505,6 +532,12 @@ export function createStage(canvas: HTMLCanvasElement, root: HTMLElement, reduce
   return {
     render,
     loadRobot,
+    setQuality: (scale) => {
+      const next = Math.min(1, Math.max(0.5, scale));
+      if (next === quality) return;
+      quality = next;
+      resize();
+    },
     setPointer: (x, y) => pointer.set(x, y),
     setRobot: (rect, progress, shot) => { robotState.rect = rect; robotState.progress = progress; robotState.shot = shot; },
     setTerrain: (rect, progress) => { terrainState.rect = rect; terrainState.progress = progress; },
@@ -523,7 +556,7 @@ export function createStage(canvas: HTMLCanvasElement, root: HTMLElement, reduce
       disposeScene(robotScene);
       disposeScene(terrainScene);
       environment.dispose();
-      robotEnvironment.dispose();
+      robotEnvironment?.dispose();
       renderer.dispose();
     },
   };

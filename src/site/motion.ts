@@ -1,5 +1,6 @@
 // Scroll and pointer choreography. One rAF loop drives smooth scrolling, every scrub and the WebGL stage,
 // so nothing can drift out of step by a frame.
+import { createParticles } from './particles';
 import { createStage, type Stage } from './stage';
 
 const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -89,64 +90,12 @@ export function initMotion(root: HTMLElement): () => void {
     nav?.classList.toggle('nav--scrolled', y > 40);
   });
 
-  // Particle field: soft dots drifting upward, stretched by scroll speed and nudged away from the pointer.
+  // Particle field (shared with the inner pages): sprite-based, lighter on phones.
   const particleCanvas = root.querySelector<HTMLCanvasElement>('[data-particles]');
-  const particleContext = particleCanvas?.getContext('2d');
-  if (particleCanvas && particleContext) {
-    type Particle = { x: number; y: number; r: number; depth: number; red: boolean; phase: number; vx: number; vy: number };
-    let particles: Particle[] = [];
-    const pointer = { x: -9999, y: -9999 };
-    listen('pointermove', (event) => { pointer.x = event.clientX; pointer.y = event.clientY; }, { passive: true });
-    const setup = () => {
-      const dpr = Math.min(window.devicePixelRatio, 1.5);
-      particleCanvas.width = window.innerWidth * dpr;
-      particleCanvas.height = window.innerHeight * dpr;
-      particleContext.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = Math.min(220, Math.round((window.innerWidth * window.innerHeight) / 9000));
-      particles = Array.from({ length: count }, () => {
-        const depth = Math.pow(Math.random(), 1.8);
-        return { x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, depth, red: Math.random() < 0.28, phase: Math.random() * Math.PI * 2, r: 0.6 + depth * 2.2, vx: 0, vy: 0 };
-      });
-    };
-    setup();
-    listen('resize', setup);
-    let time = 0;
-    frames.push((dt) => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      time += dt;
-      particleContext.clearRect(0, 0, w, h);
-      for (const p of particles) {
-        if (!reduced) {
-          // Drift up and sway, with scroll velocity adding parallax by depth.
-          p.y -= (6 + p.depth * 18) * dt + velocity * dt * (0.08 + p.depth * 0.35);
-          p.x += Math.sin(time * 0.6 + p.phase) * (4 + p.depth * 8) * dt;
-          const dx = p.x - pointer.x;
-          const dy = p.y - pointer.y;
-          const d2 = dx * dx + dy * dy;
-          if (d2 < 140 * 140 && d2 > 0.01) {
-            const force = (1 - Math.sqrt(d2) / 140) * 90 * (0.4 + p.depth);
-            const d = Math.sqrt(d2);
-            p.vx += (dx / d) * force * dt;
-            p.vy += (dy / d) * force * dt;
-          }
-          p.vx *= 0.94; p.vy *= 0.94;
-          p.x += p.vx; p.y += p.vy;
-          if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
-          if (p.y > h + 10) { p.y = -10; p.x = Math.random() * w; }
-          if (p.x < -10) p.x = w + 10;
-          if (p.x > w + 10) p.x = -10;
-        }
-        const twinkle = 0.65 + 0.35 * Math.sin(time * 1.6 + p.phase);
-        const alpha = (0.18 + p.depth * 0.7) * twinkle;
-        particleContext.fillStyle = p.red ? `rgba(255,0,51,${alpha})` : `rgba(255,235,235,${alpha * 0.8})`;
-        if (p.red && p.depth > 0.45) { particleContext.shadowColor = 'rgba(255,0,51,0.9)'; particleContext.shadowBlur = 10 * p.depth; } else { particleContext.shadowBlur = 0; }
-        particleContext.beginPath();
-        particleContext.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        particleContext.fill();
-      }
-      particleContext.shadowBlur = 0;
-    });
+  if (particleCanvas) {
+    const field = createParticles(particleCanvas, reduced);
+    cleanups.push(field.dispose);
+    frames.push((dt) => field.step(dt, velocity));
   }
 
   // --- In-view reveals and text scramble -------------------------------------------------
@@ -546,17 +495,32 @@ export function initMotion(root: HTMLElement): () => void {
     const info = gl?.getExtension('WEBGL_debug_renderer_info');
     return !info || /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(String(gl!.getParameter(info.UNMASKED_RENDERER_WEBGL)));
   })();
-  const forceModel = new URLSearchParams(window.location.search).has('model');
-  const device = navigator as Navigator & { connection?: { saveData?: boolean }; deviceMemory?: number };
-  const lowEnd = device.connection?.saveData === true || (device.deviceMemory ?? 8) <= 2;
-  const lightModel = window.innerWidth < 900 || !finePointer;
+  const params = new URLSearchParams(window.location.search);
+  const forceModel = params.has('model');
+  type Connection = { saveData?: boolean; effectiveType?: string; downlink?: number };
+  const device = navigator as Navigator & { connection?: Connection; deviceMemory?: number };
+  const connection = device.connection;
+  // No model at all on data-saver, 2G, or very low-memory devices: the still image stays instead.
+  const lowEnd = connection?.saveData === true || /(^|-)2g$/.test(connection?.effectiveType ?? '') || (device.deviceMemory ?? 8) <= 2;
+  // The light model (1 MB, compressed) on phones, touch screens, slow links and modest hardware; the full model only on fast desktops.
+  const slowLink = connection?.effectiveType === '3g' || (connection?.downlink !== undefined && connection.downlink < 5);
+  const lightModel = params.get('model') === 'light' || window.innerWidth < 900 || !finePointer || slowLink || (device.deviceMemory ?? 8) <= 4;
   const robotUrl = lightModel ? '/models/robot-mobile.glb' : '/models/protector_nemesis__the_fallen_seraph.glb';
-  const robotTimer = window.setTimeout(() => {
+  const startRobot = () => {
     if (!stage || (!forceModel && (softwareGl || lowEnd))) return;
-    stage.loadRobot(robotUrl, (ratio) => root.style.setProperty('--robot-load', String(ratio)))
+    stage.loadRobot(robotUrl, (ratio) => root.style.setProperty('--robot-load', String(ratio)), lightModel)
       .then(() => root.classList.add('robot-ready'))
       .catch((error) => console.error('Robot model failed to load; keeping the still image.', error));
-  }, 1400);
+  };
+  // Wait for the intro to settle, then start when the main thread is idle so the download and parse do not stall the hero.
+  type IdleWindow = Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+  const idleWindow = window as IdleWindow;
+  let idleId = 0;
+  const robotTimer = window.setTimeout(() => {
+    if (idleWindow.requestIdleCallback) idleId = idleWindow.requestIdleCallback(startRobot, { timeout: 2500 });
+    else startRobot();
+  }, 1600);
+  cleanups.push(() => { if (idleId) idleWindow.cancelIdleCallback?.(idleId); });
   cleanups.push(() => window.clearTimeout(robotTimer));
 
   // If a phone runs out of graphics memory the browser drops the 3D canvas; bring the still image back rather than show black.
@@ -568,12 +532,26 @@ export function initMotion(root: HTMLElement): () => void {
   let frameId = 0;
   let previous = performance.now();
   const start = previous;
+  // Adaptive quality: if frames stay slow (under ~40 fps) the 3D resolution steps down; it steps back up when there is headroom.
+  let frameAverage = 1 / 60;
+  let quality = 1;
+  let settle = 0;
   const loop = (now: number) => {
     frameId = window.requestAnimationFrame(loop);
-    const dt = Math.min((now - previous) / 1000, 0.05);
+    const rawDt = (now - previous) / 1000;
+    const dt = Math.min(rawDt, 0.05);
     previous = now;
-    for (const frame of frames) frame(dt, (now - start) / 1000);
+    if (stage && rawDt < 0.25 && !document.hidden) {
+      frameAverage += (rawDt - frameAverage) * 0.05;
+      settle += rawDt;
+      if (settle > 1.5) {
+        if (frameAverage > 1 / 40 && quality > 0.5) { quality = Math.max(0.5, quality - 0.15); stage.setQuality(quality); settle = 0; }
+        else if (frameAverage < 1 / 57 && quality < 1 && settle > 6) { quality = Math.min(1, quality + 0.1); stage.setQuality(quality); settle = 0; }
+      }
+    }
+    // The stage reads element positions; running it before the section scripts write transforms avoids a forced layout every frame.
     stage?.render(dt, (now - start) / 1000);
+    for (const frame of frames) frame(dt, (now - start) / 1000);
   };
   frameId = window.requestAnimationFrame(loop);
   cleanups.push(() => window.cancelAnimationFrame(frameId));

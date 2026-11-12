@@ -14,17 +14,6 @@ export const SHORT_DESCRIPTION = `${BRAND} is an AI, software engineering and au
 export const SUPPORTING = `From custom software and AI-powered applications to intelligent automation and connected business systems, ${BRAND} transforms complex ideas and operational challenges into practical digital solutions.`;
 export const BRAND_STATEMENT = 'We engineer intelligent software, connected systems and automated experiences that move businesses forward.';
 
-export const NAV_LINKS = [
-  { label: 'About', target: 'about' },
-  { label: 'Capabilities', target: 'capabilities' },
-  { label: 'Services', target: 'services' },
-  { label: 'Solutions', target: 'solutions' },
-  { label: 'Work', target: 'work' },
-  { label: 'Customers', target: 'customers' },
-  { label: 'Process', target: 'process' },
-  { label: 'Contact', target: 'contact' },
-];
-
 export const ROTATING_WORDS = ['problem.', 'process.', 'team.', 'customers.', 'growth.'];
 
 export const PHILOSOPHY = [
@@ -327,4 +316,179 @@ export const QUESTIONS = [
   { q: 'Can you connect our existing tools?', a: 'Usually. We integrate websites, databases, CRM and ERP systems, email, messaging, business APIs, cloud services and AI APIs, subject to API availability, permissions and technical compatibility.' },
   { q: 'Do you sell ready-made SaaS products?', a: 'Custom development is our core service. Individual products are offered only once they are actually developed, tested and ready.' },
   { q: 'What happens after launch?', a: 'Depending on the agreed arrangement: bug fixes, updates, technical support, feature improvements, performance optimization and ongoing maintenance.' },
+];
+
+// ============================================================================================
+// Multi-page site: navigation, page copy and company details for the inner pages.
+// ============================================================================================
+
+/** Company contact details. Leave a field empty to hide it everywhere; only fill in verified details. */
+export const COMPANY = {
+  name: BRAND,
+  email: EMAIL,
+  phone: '', // e.g. '+91 00000 00000'
+  address: '', // e.g. 'Office address, City, State, PIN, India'
+  hours: '', // e.g. 'Monday to Friday, 10:00 to 18:00 IST'
+  socials: [] as { label: string; href: string }[], // e.g. [{ label: 'LinkedIn', href: 'https://www.linkedin.com/company/...' }]
+};
+
+/** Main navigation (header, menu). Contact is the separate call-to-action. */
+export const PAGES = [
+  { label: 'Services', to: '/services' },
+  { label: 'Solutions', to: '/solutions' },
+  { label: 'Industries', to: '/industries' },
+  { label: 'Work', to: '/work' },
+  { label: 'Process', to: '/process' },
+  { label: 'About', to: '/about' },
+  { label: 'Careers', to: '/careers' },
+];
+
+export const slugify = (text: string) => text.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+export const serviceSlug = (index: number) => slugify(SERVICES[index].title);
+
+/** Banner image per service detail page (same order as SERVICES). */
+export const SERVICE_IMAGES = [
+  '/assets/stock/reel-code.jpg', '/assets/capabilities/cap-data.jpg', '/assets/capabilities/cap-software.jpg', '/assets/capabilities/cap-ai.jpg',
+  '/assets/capabilities/cap-integration.jpg', '/assets/capabilities/cap-automation.jpg', '/assets/capabilities/cap-data.jpg', '/assets/capabilities/cap-apps.jpg',
+  '/assets/capabilities/cap-integration.jpg', '/assets/capabilities/cap-cloud.jpg', '/assets/stock/project-salonsphere.jpg', '/assets/capabilities/cap-consulting.jpg',
+];
+
+/** Each service mapped to the core category it belongs to (index into CAPABILITIES). */
+export const SERVICE_CATEGORY = [4, 4, 1, 0, 0, 2, 3, 4, 5, 6, 4, 7];
+
+export const PAGE_IMAGES = {
+  about: '/assets/capabilities/cap-consulting.jpg',
+  services: '/assets/capabilities/cap-software.jpg',
+  solutions: '/assets/capabilities/cap-data.jpg',
+  industries: '/assets/capabilities/cap-automation.jpg',
+  work: '/assets/stock/project-citytwin.jpg',
+  process: '/assets/capabilities/cap-integration.jpg',
+  careers: '/assets/stock/reel-code.jpg',
+  contact: '/assets/capabilities/cap-cloud.jpg',
+};
+
+export const MEDIUM_DESCRIPTION = [
+  `${BRAND} helps businesses and individuals turn complex requirements into practical technology solutions. Our capabilities span custom software development, web and mobile applications, artificial intelligence, machine learning, business process automation, data engineering, system integration and cloud deployment.`,
+  'From developing a complete business application to automating repetitive operations or integrating AI into an existing system, we engineer solutions around real-world requirements.',
+];
+
+export const PHILOSOPHY_STEPS = [
+  { title: 'Understand the problem', detail: 'We start with how your business actually works: the people, the processes and where time or information gets lost.' },
+  { title: 'Engineer the solution', detail: 'We design and build the software, integrations and data flows the problem needs, and nothing it does not.' },
+  { title: 'Automate the process', detail: 'Repetitive manual steps become reliable, maintainable workflows, with AI only where it adds genuine value.' },
+  { title: 'Deliver the outcome', detail: 'We test, deploy and support working systems that can be maintained and improved over time.' },
+];
+
+/** How we keep claims honest (from the company's own credibility rules). */
+export const COMMITMENTS = [
+  { title: 'Plain claims', detail: 'We describe what we design, develop, integrate, automate, deploy and maintain. We do not advertise clients, results or partnerships we cannot show.' },
+  { title: 'Honest about AI', detail: 'We use existing models and APIs where they fit and say so. We do not present integrations as proprietary models, or human-reviewed steps as fully autonomous.' },
+  { title: 'Products when they are real', detail: 'Custom development is our core service. A product is offered only once it is developed, tested and ready.' },
+  { title: 'No guaranteed outcomes', detail: 'We commit to engineering quality and clear communication, not to business results we cannot control.' },
+];
+
+export const AI_APPROACH = ['Understand the use case', 'Identify suitable AI capabilities', 'Design the application architecture', 'Connect the required models or APIs', 'Develop the interface and backend', 'Test accuracy, reliability and security', 'Deploy and monitor the solution'];
+
+export const CAREERS = {
+  intro: `${BRAND} is a young, founder-led engineering company. We do not have advertised openings right now, but we are always glad to hear from people who care about building useful, well-engineered systems.`,
+  areas: [
+    { title: 'Software engineering', detail: 'Frontend, backend and full-stack development for web and mobile applications.' },
+    { title: 'AI & machine learning', detail: 'Applying language models, ML models and data pipelines to real business problems.' },
+    { title: 'Data engineering & analytics', detail: 'Pipelines, databases, dashboards and analysis that make information useful.' },
+    { title: 'UI/UX design', detail: 'Interfaces and product experiences that are usable, clear and consistent.' },
+    { title: 'Cloud & DevOps', detail: 'Deployment, infrastructure, monitoring and keeping systems running well.' },
+  ],
+  values: [
+    { title: 'Problem first', detail: 'Understand the actual problem before choosing the technology.' },
+    { title: 'Craft and ownership', detail: 'Write software you would be comfortable maintaining yourself.' },
+    { title: 'Honesty', detail: 'Say what works, what does not, and what you do not know yet.' },
+    { title: 'Keep learning', detail: 'AI and software move quickly; curiosity is part of the job.' },
+  ],
+  apply: `mailto:${EMAIL}?subject=${encodeURIComponent('Open application')}&body=${encodeURIComponent('Hello,\n\nI would like to be considered for future roles at Preemptech.\n\nArea of interest:\nPortfolio / GitHub / LinkedIn:\n\nI have attached my CV.\n')}`,
+};
+
+export const LEGAL_UPDATED = '12 November 2026';
+
+// Template legal copy written to match how this site actually behaves (no accounts, no analytics, no cookies set by us,
+// contact form opens the visitor's email app). Have it reviewed by a qualified professional and add your registered
+// legal entity name and address before relying on it.
+export const PRIVACY = [
+  { heading: 'Who we are', body: [`This website is operated by ${BRAND}. If you have any question about this policy or your information, contact us at ${EMAIL}.`] },
+  { heading: 'Information we collect', body: [
+    'This website has no user accounts, and we do not use analytics, advertising trackers or cookies of our own.',
+    'The contact form does not send anything to our servers. When you submit it, it opens your own email app with your message filled in. We receive your information only if you choose to send that email, and we then hold what you included, such as your name, email address, company and message.',
+    'Like most websites, our hosting provider may record standard technical logs (for example IP address, browser type and the pages requested) to keep the site secure and working.',
+  ] },
+  { heading: 'Third-party services', body: ['Fonts on this site are loaded from Google Fonts, so your browser connects to Google servers, which receive your IP address. Please see Google\'s privacy policy for how they handle that information.'] },
+  { heading: 'How we use information', body: ['We use the information you send us to reply to your enquiry, prepare proposals, deliver agreed services and meet legal or accounting obligations. We do not sell your personal information.'] },
+  { heading: 'Sharing', body: ['We share information only with service providers that help us operate (such as email hosting), when you ask us to, or when the law requires it.'] },
+  { heading: 'How long we keep it', body: ['We keep correspondence for as long as needed to handle your enquiry or project, and afterwards only as long as required for legitimate business or legal reasons.'] },
+  { heading: 'Your choices and rights', body: [`You can ask us to access, correct or delete the personal information we hold about you by emailing ${EMAIL}. We will respond within a reasonable time.`] },
+  { heading: 'Children', body: ['This website is intended for businesses and adults and is not directed at children.'] },
+  { heading: 'Changes to this policy', body: ['We may update this policy as the website or our services change. The date at the top shows when it was last updated.'] },
+];
+
+export const TERMS = [
+  { heading: 'About these terms', body: [`These terms apply to your use of the ${BRAND} website. By using the site you agree to them. If you do not agree, please do not use the site.`] },
+  { heading: 'Information on this site', body: [
+    'The content on this website describes the services we offer and how we work. It is general information, not professional advice, and it is not an offer or a contract.',
+    'Any project is governed by a separate written agreement or proposal that sets out its scope, timeline, fees and terms.',
+    'Solutions and products described on this site are examples of what we can engineer. A product is presented as available only when it has been developed, tested and is ready to offer.',
+  ] },
+  { heading: 'Intellectual property', body: [
+    `The ${BRAND} name, logo and the original text and design of this website belong to ${BRAND}. You may not copy or reuse them without our written permission.`,
+    'Stock photographs and footage are used under the Pexels licence and remain the property of their creators. Interface mock-ups on this site are illustrations, not screenshots of client systems.',
+  ] },
+  { heading: 'Acceptable use', body: ['Do not use this website in any way that is unlawful, that could damage or impair it, or that attempts to gain unauthorised access to it or to our systems.'] },
+  { heading: 'Links to other websites', body: ['We may link to websites we do not control. We are not responsible for their content or practices.'] },
+  { heading: 'No warranties', body: ['We work to keep this website accurate and available, but it is provided "as is", without warranties of any kind, and we may change or withdraw content at any time.'] },
+  { heading: 'Limitation of liability', body: ['To the extent permitted by law, we are not liable for any loss arising from your use of, or inability to use, this website or its content.'] },
+  { heading: 'Changes and contact', body: [`We may update these terms from time to time; the date at the top shows the latest version. Questions about these terms can be sent to ${EMAIL}.`] },
+];
+
+export const CONTACT_INTERESTS = ['Website or web application', 'Custom software', 'AI assistant or AI integration', 'Business process automation', 'Data, dashboards & analytics', 'Mobile application', 'APIs & system integration', 'Cloud & deployment', 'Technology consulting', 'Something else'];
+export const CONTACT_TIMELINES = ['As soon as possible', 'Within 1–3 months', 'In 3–6 months', 'Just exploring'];
+
+// ---------- Media for the inner pages (Pexels stock; see public/assets/stock/CREDITS.md) ----------
+export const VIDEOS = {
+  team: { src: '/assets/video/team.mp4', poster: '/assets/video/team.jpg' },
+  group: { src: '/assets/video/group.mp4', poster: '/assets/video/group.jpg' },
+  data: { src: '/assets/video/data.mp4', poster: '/assets/video/data.jpg' },
+  meeting: { src: '/assets/video/meeting.mp4', poster: '/assets/video/meeting.jpg' },
+  code: { src: '/assets/stock/reel-code.mp4', poster: '/assets/stock/reel-code.jpg' },
+  servers: { src: '/assets/stock/reel-servers.mp4', poster: '/assets/stock/reel-servers.jpg' },
+  traffic: { src: '/assets/stock/reel-traffic.mp4', poster: '/assets/stock/reel-traffic.jpg' },
+};
+
+/** Background video for each page banner (the PAGE_IMAGES photo is used when video is not appropriate). */
+export const PAGE_VIDEOS = {
+  about: VIDEOS.team,
+  services: VIDEOS.code,
+  solutions: VIDEOS.data,
+  industries: VIDEOS.traffic,
+  work: VIDEOS.group,
+  process: VIDEOS.servers,
+  careers: VIDEOS.meeting,
+};
+
+/** One photo per solution, same order as SOLUTIONS. */
+export const SOLUTION_IMAGES = [
+  '/assets/solutions/sol-business.jpg', '/assets/solutions/sol-crm.jpg', '/assets/stock/project-edupilot.jpg', '/assets/solutions/sol-assistant.jpg',
+  '/assets/solutions/sol-leads.jpg', '/assets/solutions/sol-ecommerce.jpg', '/assets/capabilities/cap-data.jpg', '/assets/solutions/sol-saas.jpg',
+  '/assets/solutions/sol-workflow.jpg', '/assets/capabilities/cap-automation.jpg',
+];
+
+export const ABOUT_GALLERY = [
+  { src: '/assets/video/meeting.jpg', caption: 'Discovery starts with conversation', wide: true },
+  { src: '/assets/capabilities/cap-software.jpg', caption: 'Software engineering' },
+  { src: '/assets/capabilities/cap-ai.jpg', caption: 'AI where it helps' },
+  { src: '/assets/capabilities/cap-data.jpg', caption: 'Data you can act on' },
+  { src: '/assets/capabilities/cap-cloud.jpg', caption: 'Deployed and maintained' },
+];
+
+export const CAREERS_GALLERY = [
+  { src: '/assets/video/team.jpg', caption: 'Collaborative by default', wide: true },
+  { src: '/assets/solutions/sol-saas.jpg', caption: 'Hands-on engineering', tall: true },
+  { src: '/assets/solutions/sol-workflow.jpg', caption: 'Ideas on the wall' },
+  { src: '/assets/video/group.jpg', caption: 'Focused work' },
 ];
