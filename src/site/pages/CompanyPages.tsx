@@ -238,7 +238,7 @@ export function CareersPage() {
         </div>
       </Block>
 
-      <Block label="Life at Preemptech" title="How the work looks">
+      <Block label="Life at Primptech" title="How the work looks">
         <Mosaic items={CAREERS_GALLERY} />
       </Block>
 

@@ -2,9 +2,9 @@
 // Wording rule: describe what we design, develop, engineer, integrate, automate, deploy and maintain.
 // Do not add client names, results, certifications or "available now" products without evidence.
 
-export const BRAND = 'Preemptech';
+export const BRAND = 'Primptech';
 export const MONOGRAM = 'PT';
-/** Brand logo (cropped from public/assets/aistudio/Preemptech Logo Premium.png). */
+/** Brand logo (cropped from public/assets/aistudio/Primptech Logo Premium.png). */
 export const LOGO = '/assets/brand/logo.webp';
 export const TAGLINE = 'Engineering what comes next.';
 export const EMAIL = 'contact@primptech.com';
@@ -405,7 +405,7 @@ export const CAREERS = {
     { title: 'Honesty', detail: 'Say what works, what does not, and what you do not know yet.' },
     { title: 'Keep learning', detail: 'AI and software move quickly; curiosity is part of the job.' },
   ],
-  apply: `mailto:${EMAIL}?subject=${encodeURIComponent('Open application')}&body=${encodeURIComponent('Hello,\n\nI would like to be considered for future roles at Preemptech.\n\nArea of interest:\nPortfolio / GitHub / LinkedIn:\n\nI have attached my CV.\n')}`,
+  apply: `mailto:${EMAIL}?subject=${encodeURIComponent('Open application')}&body=${encodeURIComponent('Hello,\n\nI would like to be considered for future roles at Primptech.\n\nArea of interest:\nPortfolio / GitHub / LinkedIn:\n\nI have attached my CV.\n')}`,
 };
 
 export const LEGAL_UPDATED = '12 November 2026';
