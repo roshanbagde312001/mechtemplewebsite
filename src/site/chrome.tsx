@@ -16,7 +16,7 @@ export function SiteHeader({ path, onMenu, onHome }: { path: string; onMenu: () 
         aria-label={`${BRAND} home`}
         onClick={(event) => { if (path === '/' && onHome) { event.preventDefault(); onHome(); } }}
       >
-        <img src={LOGO} alt={BRAND} width={1000} height={494} />
+        <img src={LOGO} alt={BRAND} width={1000} height={468} />
       </Link>
       <nav className="nav__links" aria-label="Main">
         {PAGES.map((page) => (
