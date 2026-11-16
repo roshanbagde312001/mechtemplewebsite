@@ -1,7 +1,7 @@
 // Scroll and pointer choreography. One rAF loop drives smooth scrolling, every scrub and the WebGL stage,
 // so nothing can drift out of step by a frame.
 import { createParticles } from './particles';
-import { createStage, type Stage } from './stage';
+import type { Stage } from './stage';
 
 const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const range = (value: number, start: number, end: number) => clamp((value - start) / (end - start));
@@ -45,10 +45,12 @@ export function initMotion(root: HTMLElement): () => void {
   cleanups.push(() => document.documentElement.classList.remove('reduced'));
 
   // --- Stage -----------------------------------------------------------------------------
+  // three.js (~600 KB) is loaded as its own chunk after the page is up, so the hero renders without waiting for it.
+  // Every use below is guarded: until the stage exists, the page simply runs without 3D.
   const canvas = root.querySelector<HTMLCanvasElement>('[data-stage]')!;
-  const stage: Stage | null = createStage(canvas, root, reduced);
-  if (!stage) root.classList.add('no-gl');
-  cleanups.push(() => stage?.dispose());
+  let stage: Stage | null = null;
+  let disposed = false;
+  cleanups.push(() => { disposed = true; stage?.dispose(); });
 
   // --- Smooth wheel scrolling ------------------------------------------------------------
   const scroller = { current: window.scrollY, target: window.scrollY, active: false };
@@ -489,12 +491,12 @@ export function initMotion(root: HTMLElement): () => void {
   }
 
   // --- Robot asset: loads after first paint. Small or touch screens get the light model. ---
-  const softwareGl = (() => {
+  const softwareGl = () => {
     if (!stage) return true;
     const gl = canvas.getContext('webgl2');
     const info = gl?.getExtension('WEBGL_debug_renderer_info');
     return !info || /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(String(gl!.getParameter(info.UNMASKED_RENDERER_WEBGL)));
-  })();
+  };
   const params = new URLSearchParams(window.location.search);
   const forceModel = params.has('model');
   type Connection = { saveData?: boolean; effectiveType?: string; downlink?: number };
@@ -507,7 +509,7 @@ export function initMotion(root: HTMLElement): () => void {
   const lightModel = params.get('model') === 'light' || window.innerWidth < 900 || !finePointer || slowLink || (device.deviceMemory ?? 8) <= 4;
   const robotUrl = lightModel ? '/models/robot-mobile.glb' : '/models/protector_nemesis__the_fallen_seraph.glb';
   const startRobot = () => {
-    if (!stage || (!forceModel && (softwareGl || lowEnd))) return;
+    if (disposed || !stage || (!forceModel && (softwareGl() || lowEnd))) return;
     stage.loadRobot(robotUrl, (ratio) => root.style.setProperty('--robot-load', String(ratio)), lightModel)
       .then(() => root.classList.add('robot-ready'))
       .catch((error) => console.error('Robot model failed to load; keeping the still image.', error));
@@ -516,12 +518,29 @@ export function initMotion(root: HTMLElement): () => void {
   type IdleWindow = Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
   const idleWindow = window as IdleWindow;
   let idleId = 0;
-  const robotTimer = window.setTimeout(() => {
-    if (idleWindow.requestIdleCallback) idleId = idleWindow.requestIdleCallback(startRobot, { timeout: 2500 });
-    else startRobot();
-  }, 1600);
+  let robotTimer = 0;
+  const scheduleRobot = () => {
+    robotTimer = window.setTimeout(() => {
+      if (idleWindow.requestIdleCallback) idleId = idleWindow.requestIdleCallback(startRobot, { timeout: 2500 });
+      else startRobot();
+    }, 1200);
+  };
   cleanups.push(() => { if (idleId) idleWindow.cancelIdleCallback?.(idleId); });
   cleanups.push(() => window.clearTimeout(robotTimer));
+
+  // Load the 3D engine once the first frames are painted.
+  const stageTimer = window.setTimeout(() => {
+    import('./stage').then(({ createStage }) => {
+      if (disposed) return;
+      stage = createStage(canvas, root, reduced);
+      if (!stage) { root.classList.add('no-gl'); return; }
+      scheduleRobot();
+    }).catch((error) => {
+      console.warn('3D stage unavailable; continuing without it.', error);
+      root.classList.add('no-gl');
+    });
+  }, 300);
+  cleanups.push(() => window.clearTimeout(stageTimer));
 
   // If a phone runs out of graphics memory the browser drops the 3D canvas; bring the still image back rather than show black.
   const onContextLost = (event: Event) => { event.preventDefault(); root.classList.remove('robot-ready'); };

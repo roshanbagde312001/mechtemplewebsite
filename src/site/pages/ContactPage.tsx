@@ -3,13 +3,12 @@ import { Clock, Mail, MapPin, Phone } from 'lucide-react';
 import { BRAND, COMPANY, CONTACT_INTERESTS, CONTACT_TIMELINES, PAGE_IMAGES, QUESTIONS } from '../content';
 import { Link } from '../router';
 import { Pill } from '../ui';
-import { Block, PageHero, usePageMeta } from './Layout';
+import { Block, PageHero } from './Layout';
 
 type Fields = { name: string; email: string; company: string; phone: string; interest: string; timeline: string; message: string };
 
 // The site has no mail backend: submitting composes the enquiry in the visitor's own email app (stated next to the button).
 export function ContactPage() {
-  usePageMeta('Contact', `Contact ${BRAND} about software, AI, automation or data projects.`);
   const initialInterest = useMemo(() => {
     const wanted = new URLSearchParams(window.location.search).get('interest') ?? '';
     return wanted;

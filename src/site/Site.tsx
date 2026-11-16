@@ -3,9 +3,9 @@ import { ArrowUpRight, Boxes, Briefcase, Building2, Factory, GraduationCap, Plus
 import { initMotion, scrollToId } from './motion';
 import { Link } from './router';
 import { SiteFooter, SiteHeader, SiteMenu } from './chrome';
-import { Label, Pill, Rise, pad, usePageMeta } from './ui';
+import { Label, Pill, Rise, pad } from './ui';
 import {
-  AREAS, BRAND, BRAND_STATEMENT, CAPABILITIES, CUSTOMERS_B2B, CUSTOMERS_B2C, DIFFERENTIATORS, ECOSYSTEM, ENGAGEMENT, FACTS, FOUNDER, INDUSTRIES, INDUSTRY_PHOTOS, INTERSECTION, JOURNEY, JOURNEY_PHOTOS, LEAD_LINES, LEAD_STEPS, LIFECYCLE, LOGO, MARQUEE, MONOGRAM, OUTCOMES, PHILOSOPHY, PROBLEMS, PROJECTS, QUESTIONS, REEL, ROTATING_WORDS, SERVICES, SHORT_DESCRIPTION, SOLUTIONS, SUPPORTING, TAGLINE, WORKFLOW, serviceSlug,
+  AREAS, BRAND, BRAND_STATEMENT, CAPABILITIES, CUSTOMERS_B2B, CUSTOMERS_B2C, DIFFERENTIATORS, ECOSYSTEM, ENGAGEMENT, FACTS, FOUNDER, INDUSTRIES, INDUSTRY_PHOTOS, INTERSECTION, JOURNEY, JOURNEY_PHOTOS, LEAD_LINES, LEAD_STEPS, LIFECYCLE, LOGO, MARQUEE, MONOGRAM, OUTCOMES, PHILOSOPHY, PROBLEMS, PROJECTS, QUESTIONS, REEL, ROTATING_WORDS, SERVICES, SHORT_DESCRIPTION, SOLUTIONS, SUPPORTING, TAGLINE, WORKFLOW, serviceSlug, altFor,
 } from './content';
 
 const INDUSTRY_ICONS = [Building2, GraduationCap, Store, Users, Briefcase, Factory, Rocket];
@@ -51,7 +51,7 @@ function Preloader({ onDone }: { onDone: () => void }) {
   if (state === 'gone') return null;
   return (
     <div className={`loader ${state === 'leave' ? 'loader--leave' : ''}`} aria-hidden="true">
-      <img className="loader__brand" src={LOGO} alt="" />
+      <img className="loader__brand" src={LOGO} alt={BRAND} />
       <span className="loader__count" ref={counter}>000</span>
       <span className="loader__bar"><span ref={bar} /></span>
     </div>
@@ -109,11 +109,11 @@ function ProjectDialog({ index, onClose }: { index: number | null; onClose: () =
     <div className="dialog" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="dialog__panel" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
         <button ref={closeButton} className="dialog__close" type="button" onClick={onClose} aria-label="Close project details"><X size={18} /></button>
-        <img className="dialog__photo" src={project.photo} alt="" />
+        <img className="dialog__photo" src={project.photo} alt={altFor(project.photo)} />
         <p className="label">{project.category}</p>
         <h3 id="dialog-title">{project.name}</h3>
         <p>{project.details}</p>
-        <p className="dialog__note">Interface and photo shown are illustrations. Feature-level specifications and product imagery were not included in the available brief. No commercial deployment or client result is implied.</p>
+        <p className="dialog__note">The interface and photo shown are illustrations, not product screenshots. Project details are shared on request.</p>
       </section>
     </div>
   );
@@ -155,7 +155,7 @@ function Depth({ shot, id, figure, title, caption, signals, poster }: { shot: 0 
   return (
     <section className="depth pin" data-depth={shot} aria-labelledby={id}>
       <div className="pin__inner">
-        <img className="depth__poster" src={poster} alt="" aria-hidden="true" />
+        <img className="depth__poster" src={poster} alt={altFor(poster)} aria-hidden="true" />
         <div className="depth__slices" aria-hidden="true">{Array.from({ length: 11 }, (_, i) => <span key={i} data-slice />)}</div>
         <p className="depth__meta"><span className="label">{figure}</span><span className="label" data-frame>000</span></p>
         <ul className="depth__signals">{signals.map((signal, i) => <li key={signal} data-signal><small>{pad(i + 1)}</small>{signal}</li>)}</ul>
@@ -223,7 +223,6 @@ function Questions() {
 }
 
 export function Site() {
-  usePageMeta('', `${BRAND} is an AI, software engineering and automation company. We design, develop, integrate, automate and deploy software and intelligent systems.`);
   const root = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -261,7 +260,7 @@ export function Site() {
       <main id="main">
         {/* Hero */}
         <section className="hero" id="top" data-hero aria-labelledby="hero-title">
-          <div className="hero__bg" aria-hidden="true"><img src="/assets/hero/hero-circuit.jpg" alt="" fetchPriority="high" /></div>
+          <div className="hero__bg" aria-hidden="true"><img src="/assets/hero/hero-circuit.jpg" alt={altFor('/assets/hero/hero-circuit.jpg')} fetchPriority="high" /></div>
           <div className="hero__glow" data-hero-glow aria-hidden="true" />
           <div className="hero__copy">
             <h1 className="hero__title" id="hero-title" aria-label={TAGLINE}>
@@ -339,7 +338,7 @@ export function Site() {
             </div>
             <div className="services__card">
               <div className="services__photos" aria-hidden="true">
-                {CAPABILITIES.map((group, i) => <img key={group.title} src={group.image} alt="" loading={i === 0 ? 'eager' : 'lazy'} data-service-photo />)}
+                {CAPABILITIES.map((group, i) => <img key={group.title} src={group.image} alt={altFor(group.image)} loading={i === 0 ? 'eager' : 'lazy'} data-service-photo />)}
               </div>
               <span className="services__number" data-service-number aria-hidden="true">01</span>
               {/* Photos replace the 3D shape in this card; data-hidden keeps the stage from drawing it. */}
@@ -469,7 +468,7 @@ export function Site() {
                 {PROJECTS.map((item, i) => (
                   <button type="button" className="screen" key={item.name} data-work-screen data-cursor="Open" onClick={() => setProject(i)}>
                     <span className="screen__bar"><i /><i /><i /><em>{item.name}</em></span>
-                    <span className="screen__body"><img className="screen__photo" src={item.photo} alt="" loading="lazy" /><span className="screen__mock"><ProjectScreen kind={item.screen} /></span></span>
+                    <span className="screen__body"><img className="screen__photo" src={item.photo} alt={altFor(item.photo)} loading="lazy" /><span className="screen__mock"><ProjectScreen kind={item.screen} /></span></span>
                     <span className="screen__info"><strong>{item.name}</strong><small>{item.description}</small></span>
                   </button>
                 ))}
@@ -486,7 +485,7 @@ export function Site() {
             <p className="spiral__meta"><span className="label">From idea to working product</span><span className="label">{JOURNEY.length} stages · {ECOSYSTEM.length} connected systems</span></p>
             <div className="spiral__space">
               <h2 className="spiral__title" id="spiral-title" data-spiral-title>Every step<br />in view.</h2>
-              {JOURNEY.map((stage, i) => <div className="card card--photo" key={stage} data-spiral-card><img src={JOURNEY_PHOTOS[i]} alt="" loading="lazy" /><small>Stage {pad(i + 1)}</small><strong>{stage}</strong></div>)}
+              {JOURNEY.map((stage, i) => <div className="card card--photo" key={stage} data-spiral-card><img src={JOURNEY_PHOTOS[i]} alt={altFor(JOURNEY_PHOTOS[i])} loading="lazy" /><small>Stage {pad(i + 1)}</small><strong>{stage}</strong></div>)}
               {ECOSYSTEM.map((node) => <div className="card card--system" key={node} data-spiral-card><small>Connected</small><strong>{node}</strong><Boxes size={18} /></div>)}
             </div>
             <p className="spiral__meta"><span className="label">Websites, CRM, ERP, AI and analytics working as one system</span></p>
@@ -525,7 +524,7 @@ export function Site() {
           <ul className="grid" data-spot>
             {INDUSTRIES.map((name, i) => {
               const Icon = INDUSTRY_ICONS[i];
-              return <li key={name} data-rv style={{ '--d': `${i * 50}ms` } as React.CSSProperties}><img className="grid__photo" src={INDUSTRY_PHOTOS[i]} alt="" loading="lazy" /><Icon size={26} strokeWidth={1.4} /><span>{name}</span></li>;
+              return <li key={name} data-rv style={{ '--d': `${i * 50}ms` } as React.CSSProperties}><img className="grid__photo" src={INDUSTRY_PHOTOS[i]} alt={altFor(INDUSTRY_PHOTOS[i])} loading="lazy" /><Icon size={26} strokeWidth={1.4} /><span>{name}</span></li>;
             })}
           </ul>
         </section>

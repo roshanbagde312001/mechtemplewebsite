@@ -1,14 +1,13 @@
 // Frame for every inner page: header, menu, footer, particle background, reveal-on-scroll and page metadata.
 // Inner pages never load three.js; only the home page does.
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { altFor } from '../content';
 import { SiteFooter, SiteHeader, SiteMenu } from '../chrome';
 import { createParticles } from '../particles';
 import { Link } from '../router';
 import { Pill, Rise } from '../ui';
 import { LazyVideo, useParallax, type VideoSource } from './media';
 import './pages.css';
-
-export { usePageMeta } from '../ui';
 
 export function PageLayout({ path, children }: { path: string; children: React.ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
@@ -90,7 +89,7 @@ export function PageHero({ crumbs, label, title, intro, image, video, children }
       {(image || video) && (
         <div className="page-hero__bg" aria-hidden="true">
           <div className="page-hero__media" data-parallax>
-            {video ? <LazyVideo video={video} eager /> : <img src={image} alt="" fetchPriority="high" />}
+            {video ? <LazyVideo video={video} eager /> : <img src={image} alt={altFor(image ?? '')} fetchPriority="high" />}
           </div>
         </div>
       )}

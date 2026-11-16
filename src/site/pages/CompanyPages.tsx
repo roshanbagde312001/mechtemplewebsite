@@ -5,10 +5,9 @@ import {
 } from '../content';
 import { Pill, pad } from '../ui';
 import { Media, Mosaic, VideoBand } from './media';
-import { Block, CtaBand, PageHero, usePageMeta } from './Layout';
+import { Block, CtaBand, PageHero } from './Layout';
 
 export function AboutPage() {
-  usePageMeta('About us', SHORT_DESCRIPTION);
   return (
     <>
       <PageHero
@@ -118,7 +117,6 @@ export function AboutPage() {
 }
 
 export function ProcessPage() {
-  usePageMeta('How we work', 'Our seven-step project lifecycle: discovery, requirement analysis, architecture and design, development, testing, deployment, and support.');
   return (
     <>
       <PageHero
@@ -179,7 +177,6 @@ export function ProcessPage() {
 }
 
 export function WorkPage() {
-  usePageMeta('Work', 'Selected products and projects: EduPilot, CityTwin Nagpur and SalonSphere.');
   return (
     <>
       <PageHero
@@ -201,7 +198,7 @@ export function WorkPage() {
                 <h2>{project.name}</h2>
                 <p className="work-item__lead">{project.description}</p>
                 <p>{project.details}</p>
-                <p className="note">Photo is an illustration. Feature-level specifications were not included in the available brief, and no commercial deployment or client result is implied.</p>
+                <p className="note">The photo is a representative stock image, not a product screenshot. Project details are shared on request.</p>
               </div>
             </article>
           ))}
@@ -214,7 +211,6 @@ export function WorkPage() {
 }
 
 export function CareersPage() {
-  usePageMeta('Careers', `Careers at ${BRAND}: software engineering, AI and machine learning, data engineering, UI/UX design, cloud and DevOps.`);
   return (
     <>
       <PageHero

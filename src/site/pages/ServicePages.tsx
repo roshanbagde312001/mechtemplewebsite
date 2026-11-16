@@ -2,18 +2,17 @@ import React, { useState } from 'react';
 import { ArrowUpRight, Briefcase, Building2, Factory, GraduationCap, Rocket, Store, Users } from 'lucide-react';
 import {
   AI_APPROACH, CAPABILITIES, CUSTOMERS_B2B, CUSTOMERS_B2C, INDUSTRIES, INDUSTRY_PHOTOS, LIFECYCLE, PAGE_IMAGES, PAGE_VIDEOS, QUESTIONS, SERVICE_CATEGORY,
-  SERVICE_IMAGES, SERVICES, SOLUTION_IMAGES, SOLUTIONS, VIDEOS, WORKFLOW, serviceSlug,
+  SERVICE_IMAGES, SERVICES, SOLUTION_IMAGES, SOLUTIONS, VIDEOS, WORKFLOW, serviceSlug, altFor,
 } from '../content';
 import { Link } from '../router';
 import { Pill, pad } from '../ui';
-import { Block, CtaBand, PageHero, usePageMeta } from './Layout';
+import { Block, CtaBand, PageHero } from './Layout';
 import { Media, VideoBand } from './media';
 import { NotFoundPage } from './LegalPages';
 
 const INDUSTRY_ICONS = [Building2, GraduationCap, Store, Users, Briefcase, Factory, Rocket];
 
 export function ServicesPage() {
-  usePageMeta('Services', 'Website and web application development, custom software, AI, machine learning, automation, data engineering, mobile apps, APIs, cloud deployment, UI/UX and technology consulting.');
   return (
     <>
       <PageHero
@@ -32,7 +31,7 @@ export function ServicesPage() {
         <ul className="cap-grid">
           {CAPABILITIES.map((cap, i) => (
             <li key={cap.title} className="cap-card glass" data-rv style={{ '--d': `${(i % 4) * 60}ms` } as React.CSSProperties}>
-              <img src={cap.image} alt="" loading="lazy" />
+              <img src={cap.image} alt={altFor(cap.image)} loading="lazy" />
               <div>
                 <small>{pad(i + 1)}</small>
                 <h3>{cap.title}</h3>
@@ -77,7 +76,6 @@ export function ServicesPage() {
 export function ServiceDetailPage({ slug }: { slug: string }) {
   const index = SERVICES.findIndex((_, i) => serviceSlug(i) === slug);
   const service = SERVICES[index];
-  usePageMeta(service ? service.title : 'Page not found', service?.intro);
   if (!service) return <NotFoundPage />;
 
   const category = CAPABILITIES[SERVICE_CATEGORY[index]];
@@ -176,7 +174,7 @@ function SolutionCard({ index }: { index: number }) {
   return (
     <article className="sol-card glass" id={`solution-${index + 1}`} data-rv style={{ '--d': `${(index % 3) * 70}ms` } as React.CSSProperties}>
       <div className="sol-card__media">
-        <img src={SOLUTION_IMAGES[index]} alt="" loading="lazy" decoding="async" />
+        <img src={SOLUTION_IMAGES[index]} alt={altFor(SOLUTION_IMAGES[index])} loading="lazy" decoding="async" />
         <span className="sol-card__num">{pad(index + 1)}</span>
       </div>
       <div className="sol-card__body">
@@ -196,7 +194,6 @@ function SolutionCard({ index }: { index: number }) {
 }
 
 export function SolutionsPage() {
-  usePageMeta('Solutions', 'Business management systems, CRM, education management, AI business assistants, automated lead management, e-commerce, BI platforms, SaaS and workflow systems.');
   const featured = SOLUTIONS.findIndex((solution) => solution.flow);
   const flow = SOLUTIONS[featured].flow!;
   const rest = SOLUTIONS.map((_, i) => i).filter((i) => i !== featured);
@@ -273,7 +270,6 @@ export function SolutionsPage() {
 }
 
 export function IndustriesPage() {
-  usePageMeta('Industries', 'Software, AI and automation for construction, education, retail and e-commerce, recruitment, professional services, SMBs and startups.');
   return (
     <>
       <PageHero
@@ -289,7 +285,7 @@ export function IndustriesPage() {
         <ul className="grid industries-grid">
           {INDUSTRIES.map((name, i) => {
             const Icon = INDUSTRY_ICONS[i];
-            return <li key={name} data-rv style={{ '--d': `${(i % 3) * 50}ms` } as React.CSSProperties}><img className="grid__photo" src={INDUSTRY_PHOTOS[i]} alt="" loading="lazy" /><Icon size={26} strokeWidth={1.4} /><span>{name}</span></li>;
+            return <li key={name} data-rv style={{ '--d': `${(i % 3) * 50}ms` } as React.CSSProperties}><img className="grid__photo" src={INDUSTRY_PHOTOS[i]} alt={altFor(INDUSTRY_PHOTOS[i])} loading="lazy" /><Icon size={26} strokeWidth={1.4} /><span>{name}</span></li>;
           })}
         </ul>
       </Block>

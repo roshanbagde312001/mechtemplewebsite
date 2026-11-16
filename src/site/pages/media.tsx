@@ -2,6 +2,7 @@
 // videos download only when near the viewport, pause off-screen, and fall back to their poster
 // for reduced motion, data saver and slow connections.
 import React, { useEffect, useRef } from 'react';
+import { altFor } from '../content';
 
 export type VideoSource = { src: string; poster: string };
 
@@ -44,10 +45,10 @@ export function LazyVideo({ video, className = '', eager = false }: { video: Vid
 }
 
 /** Image that wipes into view and settles from a slight zoom. `ratio` sets the frame shape (CSS aspect-ratio). */
-export function Media({ src, alt = '', ratio, className = '', parallax = false, children }: { src: string; alt?: string; ratio?: string; className?: string; parallax?: boolean; children?: React.ReactNode }) {
+export function Media({ src, alt, ratio, className = '', parallax = false, children }: { src: string; alt?: string; ratio?: string; className?: string; parallax?: boolean; children?: React.ReactNode }) {
   return (
     <figure className={`media ${className}`} style={ratio ? { aspectRatio: ratio } : undefined} data-rv>
-      <img src={src} alt={alt} loading="lazy" decoding="async" data-parallax={parallax ? '' : undefined} />
+      <img src={src} alt={alt ?? altFor(src)} loading="lazy" decoding="async" data-parallax={parallax ? '' : undefined} />
       {children}
     </figure>
   );

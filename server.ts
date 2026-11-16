@@ -1,4 +1,5 @@
 import express from 'express';
+import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
@@ -6,6 +7,7 @@ import { GoogleGenAI } from '@google/genai';
 dotenv.config();
 
 const app = express();
+app.disable('x-powered-by');
 const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json({ limit: '50mb' }));
@@ -101,14 +103,55 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    app.use(express.static(path.resolve(rootDir, 'dist')));
-    app.get('*', (_req, res) => {
-      res.sendFile(path.resolve(rootDir, 'dist', 'index.html'));
+    const dist = path.resolve(rootDir, 'dist');
+    const notFoundPage = path.join(dist, '404.html');
+
+    app.use((_req, res, next) => {
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      next();
+    });
+
+    // One URL per page: /about/ -> /about (the query string is kept).
+    app.use((req, res, next) => {
+      if (req.path.length > 1 && req.path.endsWith('/')) {
+        const query = req.originalUrl.slice(req.originalUrl.indexOf('?') === -1 ? req.originalUrl.length : req.originalUrl.indexOf('?'));
+        return res.redirect(301, req.path.replace(/\/+$/, '') + query);
+      }
+      next();
+    });
+
+    /** Sends a file, using the pre-compressed .br/.gz copy written at build time when the browser accepts it. */
+    const sendFile = (req: express.Request, res: express.Response, file: string, status = 200) => {
+      const accepts = String(req.headers['accept-encoding'] ?? '');
+      const variant = accepts.includes('br') && fs.existsSync(`${file}.br`) ? 'br' : accepts.includes('gzip') && fs.existsSync(`${file}.gz`) ? 'gzip' : '';
+      res.status(status).type(path.extname(file));
+      res.setHeader('Vary', 'Accept-Encoding');
+      // Hashed build assets never change; HTML and root files must always be revalidated.
+      res.setHeader('Cache-Control', file.startsWith(path.join(dist, 'assets') + path.sep) && /-[A-Za-z0-9_-]{8}\.(js|css)$/.test(file)
+        ? 'public, max-age=31536000, immutable'
+        : file.endsWith('.html') ? 'no-cache' : 'public, max-age=86400');
+      if (variant) res.setHeader('Content-Encoding', variant);
+      res.sendFile(variant ? `${file}.${variant === 'br' ? 'br' : 'gz'}` : file);
+    };
+
+    app.get('*', (req, res) => {
+      let requested: string;
+      try { requested = decodeURIComponent(req.path); } catch { return sendFile(req, res, notFoundPage, 404); }
+      const target = path.normalize(path.join(dist, requested));
+      if (!target.startsWith(dist)) return sendFile(req, res, notFoundPage, 404);
+      // Real files (assets, sitemap.xml, robots.txt, favicon.ico, ...). Pre-compressed copies are never served directly.
+      if (!/\.(br|gz)$/.test(target) && fs.existsSync(target) && fs.statSync(target).isFile()) return sendFile(req, res, target);
+      // Pages: each route was written to <route>/index.html at build time; anything else is a real 404.
+      const page = requested === '/' ? path.join(dist, 'index.html') : path.join(target, 'index.html');
+      if (fs.existsSync(page)) return sendFile(req, res, page);
+      return sendFile(req, res, notFoundPage, 404);
     });
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Korvantage Solutions server running on http://0.0.0.0:${PORT}`);
+    console.log(`Primptech server running on http://0.0.0.0:${PORT}`);
   });
 }
 

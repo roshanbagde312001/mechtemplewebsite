@@ -1,7 +1,7 @@
 import React from 'react';
 import { LEGAL_UPDATED, PRIVACY, TERMS } from '../content';
 import { Pill } from '../ui';
-import { Block, PageHero, usePageMeta } from './Layout';
+import { Block, PageHero } from './Layout';
 
 function LegalPage({ title, sections }: { title: string; sections: { heading: string; body: string[] }[] }) {
   return (
@@ -22,17 +22,14 @@ function LegalPage({ title, sections }: { title: string; sections: { heading: st
 }
 
 export function PrivacyPage() {
-  usePageMeta('Privacy policy', 'How this website handles personal information.');
   return <LegalPage title="Privacy policy" sections={PRIVACY} />;
 }
 
 export function TermsPage() {
-  usePageMeta('Terms of use', 'Terms that apply to the use of this website.');
   return <LegalPage title="Terms of use" sections={TERMS} />;
 }
 
 export function NotFoundPage() {
-  usePageMeta('Page not found');
   return (
     <PageHero crumbs={[{ label: 'Not found' }]} label="Error 404" title={'This page does\nnot exist.'} intro={<p>The link may be old or mistyped. Try one of these instead.</p>}>
       <Pill to="/">Go to the home page</Pill>

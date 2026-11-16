@@ -1,6 +1,8 @@
 {
-  "name": "Build Smarter. Automate Better. Grow Faster.",
-  "description": "A cinematic, scroll-driven presentation of business software, AI and automation capabilities.",
+  "name": "Primptech",
+  "description": "Primptech website: AI, software engineering and automation company.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
