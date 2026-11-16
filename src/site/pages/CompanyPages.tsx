@@ -3,6 +3,7 @@ import {
   AREAS, BRAND, BRAND_STATEMENT, CAREERS, COMMITMENTS, DIFFERENTIATORS, ENGAGEMENT, FACTS, FOUNDER, INTERSECTION, LIFECYCLE, MEDIUM_DESCRIPTION,
   ABOUT_GALLERY, CAREERS_GALLERY, JOURNEY_PHOTOS, PAGE_IMAGES, PAGE_VIDEOS, PHILOSOPHY_STEPS, PROJECTS, QUESTIONS, SHORT_DESCRIPTION, VIDEOS,
 } from '../content';
+import { Link } from '../router';
 import { Pill, pad } from '../ui';
 import { Media, Mosaic, VideoBand } from './media';
 import { Block, CtaBand, PageHero } from './Layout';
@@ -76,7 +77,7 @@ export function AboutPage() {
         </div>
       </Block>
 
-      <Block label="Leadership" title="The team behind the work">
+      <Block id="founder" label="Leadership" title="The team behind the work">
         <div className="founder glass" data-rv>
           <figure className="founder__photo"><img src={FOUNDER.photo} alt={`${FOUNDER.name}, ${FOUNDER.role}`} width={400} height={400} loading="lazy" decoding="async" /></figure>
           <div>
@@ -125,7 +126,7 @@ export function ProcessPage() {
         title={'Seven steps, from\nproblem to production.'}
         image={PAGE_IMAGES.process}
         video={PAGE_VIDEOS.process}
-        intro={<p>A clear lifecycle keeps projects predictable. You always know what we are doing, what we need from you, and what comes next.</p>}
+        intro={<p>A clear lifecycle keeps projects predictable. You always know what we are doing, what we need from you, and what comes next. The same seven steps apply to every service, from <Link to="/services/website-development">website development</Link> and <Link to="/services/custom-software-development">custom software</Link> to <Link to="/services/artificial-intelligence-development">AI development</Link> and <Link to="/services/intelligent-process-automation">process automation</Link>.</p>}
       >
         <Pill to="/contact">Start with discovery</Pill>
       </PageHero>
@@ -176,6 +177,13 @@ export function ProcessPage() {
   );
 }
 
+/** The service each project in PROJECTS demonstrates (same order). */
+const WORK_SERVICES = [
+  { slug: 'web-application-development', label: 'Web application development' },
+  { slug: 'data-engineering-and-analytics', label: 'Data engineering & analytics' },
+  { slug: 'custom-software-development', label: 'Custom software development' },
+];
+
 export function WorkPage() {
   return (
     <>
@@ -198,6 +206,7 @@ export function WorkPage() {
                 <h2>{project.name}</h2>
                 <p className="work-item__lead">{project.description}</p>
                 <p>{project.details}</p>
+                <p>Related service: <Link to={`/services/${WORK_SERVICES[i].slug}`}>{WORK_SERVICES[i].label}</Link></p>
                 <p className="note">The photo is a representative stock image, not a product screenshot. Project details are shared on request.</p>
               </div>
             </article>

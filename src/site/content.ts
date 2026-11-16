@@ -328,7 +328,20 @@ export const COMPANY = {
   name: BRAND,
   email: EMAIL,
   phone: '', // e.g. '+91 00000 00000'
-  address: '', // e.g. 'Office address, City, State, PIN, India'
+  address: 'The Prism, Shastri Nagar, near Ambedkar Nagar Metro Station Square, Wardhaman Nagar Colony, Nagpur, Maharashtra 440008, India',
+  /** Same address split into schema.org PostalAddress fields (structured data). */
+  postalAddress: {
+    streetAddress: 'The Prism, Shastri Nagar, near Ambedkar Nagar Metro Station Square, Wardhaman Nagar Colony',
+    addressLocality: 'Nagpur',
+    addressRegion: 'Maharashtra',
+    postalCode: '440008',
+    addressCountry: 'IN',
+  },
+  /** Google Maps search used for the contact-page map and the "Open in Google Maps" link. For an exact pin, replace
+   *  mapEmbed with the URL from Google Maps → Share → Embed a map (the src="…" value). */
+  mapQuery: 'The Prism, Shastri Nagar, Wardhaman Nagar, Nagpur, Maharashtra 440008',
+  get mapEmbed() { return `https://www.google.com/maps?q=${encodeURIComponent(this.mapQuery)}&output=embed`; },
+  get mapLink() { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(this.mapQuery)}`; },
   hours: '', // e.g. 'Monday to Friday, 10:00 to 18:00 IST'
   socials: [] as { label: string; href: string }[], // e.g. [{ label: 'LinkedIn', href: 'https://www.linkedin.com/company/...' }]
 };
@@ -408,7 +421,7 @@ export const CAREERS = {
   apply: `mailto:${EMAIL}?subject=${encodeURIComponent('Open application')}&body=${encodeURIComponent('Hello,\n\nI would like to be considered for future roles at Primptech.\n\nArea of interest:\nPortfolio / GitHub / LinkedIn:\n\nI have attached my CV.\n')}`,
 };
 
-export const LEGAL_UPDATED = '12 November 2026';
+export const LEGAL_UPDATED = '16 November 2026';
 
 // Template legal copy written to match how this site actually behaves (no accounts, no analytics, no cookies set by us,
 // contact form opens the visitor's email app). Have it reviewed by a qualified professional and add your registered
@@ -420,7 +433,10 @@ export const PRIVACY = [
     'The contact form does not send anything to our servers. When you submit it, it opens your own email app with your message filled in. We receive your information only if you choose to send that email, and we then hold what you included, such as your name, email address, company and message.',
     'Like most websites, our hosting provider may record standard technical logs (for example IP address, browser type and the pages requested) to keep the site secure and working.',
   ] },
-  { heading: 'Third-party services', body: ['Fonts on this site are loaded from Google Fonts, so your browser connects to Google servers, which receive your IP address. Please see Google\'s privacy policy for how they handle that information.'] },
+  { heading: 'Third-party services', body: [
+    'Fonts on this site are loaded from Google Fonts, so your browser connects to Google servers, which receive your IP address. Please see Google\'s privacy policy for how they handle that information.',
+    'The contact page shows our office location on an embedded Google Map. When that map loads, Google receives your IP address and may set its own cookies, under Google\'s privacy policy.',
+  ] },
   { heading: 'How we use information', body: ['We use the information you send us to reply to your enquiry, prepare proposals, deliver agreed services and meet legal or accounting obligations. We do not sell your personal information.'] },
   { heading: 'Sharing', body: ['We share information only with service providers that help us operate (such as email hosting), when you ask us to, or when the law requires it.'] },
   { heading: 'How long we keep it', body: ['We keep correspondence for as long as needed to handle your enquiry or project, and afterwards only as long as required for legitimate business or legal reasons.'] },
@@ -540,3 +556,169 @@ export const IMAGE_ALT: Record<string, string> = {
 
 /** Alt text for an image path; falls back to the brand name so no image is ever unlabeled. */
 export const altFor = (src: string) => IMAGE_ALT[src] ?? `${BRAND} illustration`;
+
+// ---------- Search and answer-engine copy for each service page (same order as SERVICES) ----------
+// `title` is the browser-tab/search title (before " | Primptech"); `description` is the meta description (max ~158 chars);
+// `question`/`answer` open the page with a direct definition; `faqs` are specific to the service and shown on the page,
+// so the FAQPage structured data always matches visible text. `solutions` are indexes into SOLUTIONS, `project` into PROJECTS.
+// Keep every statement consistent with the rest of this file: no prices, client names, results or certifications.
+export type ServiceSeo = {
+  title: string;
+  description: string;
+  question: string;
+  answer: string;
+  faqs: { q: string; a: string }[];
+  solutions: number[];
+  project?: number;
+};
+
+export const SERVICE_SEO: ServiceSeo[] = [
+  {
+    title: 'Website Development Services for Businesses',
+    description: 'Business, e-commerce and custom websites with admin panels, integrations and an SEO-ready structure, designed, built, tested and deployed by Primptech.',
+    question: 'What is website development?',
+    answer: 'Website development is the design, build and deployment of a website: its interface, content structure and, where needed, the backend, database and integrations behind it. Primptech builds business, e-commerce and custom websites that do real work, such as taking orders, bookings or enquiries, rather than static brochure pages.',
+    faqs: [
+      { q: 'How does the website development process work?', a: 'It follows our seven-step lifecycle: discovery, requirement analysis, architecture and design, development, testing, deployment, then support. You see the design and working pages before launch, and the site goes live with hosting, domain and handover documentation in place.' },
+      { q: 'Can my website include an admin panel or online payments?', a: 'Yes. Where the site needs them we build an admin panel for managing content, products or orders, and integrate payment gateways, booking systems or other APIs, subject to the provider\'s API availability.' },
+      { q: 'What is the difference between a website and a web application?', a: 'A website mainly presents information and captures actions such as enquiries or purchases. A web application is software that people log in to and work in every day, such as a CRM or dashboard. Many projects combine both; see our web application development service.' },
+    ],
+    solutions: [5, 4],
+  },
+  {
+    title: 'Web Application Development: CRM, SaaS & Portals',
+    description: 'Custom web applications such as CRMs, ERPs, SaaS platforms, dashboards and customer portals, with secure authentication, role-based access and reporting.',
+    question: 'What is web application development?',
+    answer: 'Web application development is building interactive software that runs in a browser: users sign in, enter and manage data, and complete tasks. Primptech turns business requirements into working platforms such as CRMs, ERPs, learning management systems, SaaS products, dashboards and customer portals.',
+    faqs: [
+      { q: 'How can a business develop a SaaS application?', a: 'Start by defining the problem and the first set of customers, then scope a focused first release. A SaaS platform typically needs multi-user accounts, organizations, permissions, subscription billing and usage management. We design the architecture for that from the start, build and test the first release, deploy it, and extend it as real usage shows what matters.' },
+      { q: 'Do you build role-based access and admin panels?', a: 'Yes. Authentication, role-based access control, admin panels and reporting are standard parts of the web applications we build, scoped to the roles and permissions your organization actually uses.' },
+      { q: 'Can a web application integrate with our existing systems?', a: 'Usually. We connect web applications to databases, CRM and ERP systems, email, payment gateways and other business APIs, subject to API availability, permissions and technical compatibility.' },
+    ],
+    solutions: [1, 7, 0],
+    project: 0,
+  },
+  {
+    title: 'Custom Software Development Services',
+    description: 'Custom software engineered around how your business works: internal systems, workflow apps, data management and modernization of existing applications.',
+    question: 'What is custom software development?',
+    answer: 'Custom software development is designing and building software for one organization\'s specific requirements, instead of adapting the business to a generic, off-the-shelf product. Primptech builds custom business applications, internal management systems, workflow tools and portals, and modernizes software that no longer fits.',
+    faqs: [
+      { q: 'How much does custom software development cost?', a: 'There is no fixed price, because cost follows scope: the number of features and user roles, integrations with other systems, data migration, design complexity and the level of ongoing support. We define the scope during discovery and requirement analysis, so an estimate is based on agreed requirements rather than a package price.' },
+      { q: 'When is custom software better than off-the-shelf software?', a: 'When generic tools force workarounds: too many spreadsheets, manually maintained records, departments that cannot share data, or software that does not match the real workflow. If an existing product fits well, using it is often the better choice, and we will say so.' },
+      { q: 'Can you improve or modernize our existing software?', a: 'Yes. Modernizing and improving existing applications is part of this service, from adding features and integrations to restructuring software that has become hard to maintain.' },
+    ],
+    solutions: [0, 8, 9],
+    project: 2,
+  },
+  {
+    title: 'AI Development: Assistants, Chatbots & AI Integration',
+    description: 'AI assistants, chatbots, document intelligence and AI integration into existing software, built where AI solves a genuine business problem.',
+    question: 'What is artificial intelligence development?',
+    answer: 'Artificial intelligence development is building software features that use AI models to understand language, documents or data, for example assistants that answer questions from approved business information, chatbots, document extraction and AI-assisted search. Primptech connects suitable existing models and APIs to your applications and workflows, and uses AI only where it solves a genuine problem.',
+    faqs: [
+      { q: 'How can AI automation help businesses?', a: 'AI can take on work that involves reading and judgement: answering routine questions, extracting data from documents, classifying and routing enquiries, summarizing information and assisting search. Combined with conventional automation, that reduces repetitive manual work, while people stay in control of decisions that need them.' },
+      { q: 'Do you build your own AI models?', a: 'For most business use cases we integrate existing language models and AI APIs and build the application, data connections and safeguards around them. We do not present integrations as proprietary models. Where a problem needs a predictive model trained on your data, see our machine learning solutions.' },
+      { q: 'Can an AI assistant use our company documents?', a: 'Yes. Knowledge assistants and document Q&A can be connected to approved business information, with permissions controlling what each user can access. Accuracy, reliability and security are tested before deployment.' },
+    ],
+    solutions: [3, 4],
+  },
+  {
+    title: 'Machine Learning Solutions & Predictive Models',
+    description: 'Machine learning for forecasting, classification, recommendations, segmentation and anomaly detection, from data assessment to deployment and monitoring.',
+    question: 'What are machine learning solutions?',
+    answer: 'Machine learning solutions are models trained on historical data to make predictions or find patterns, such as forecasting demand, classifying records, recommending products or flagging unusual transactions. Primptech assesses whether your data supports the use case, then prepares the data, trains and evaluates models, and deploys and monitors them.',
+    faqs: [
+      { q: 'What is the difference between AI and machine learning?', a: 'Artificial intelligence is the broad field of software performing tasks that normally need human intelligence. Machine learning is one approach within it: models that learn patterns from data instead of following hand-written rules. Many business AI features use pre-trained language models, while machine learning projects usually train a model on your own data for a specific prediction.' },
+      { q: 'How much data do we need for machine learning?', a: 'It depends on the problem. Results depend on data availability, quality and the suitability of the use case, so every project starts with a data assessment. If the data is not sufficient yet, we will tell you, and data engineering may be the right first step.' },
+      { q: 'How is a machine learning model deployed?', a: 'After evaluation, the model is integrated into an application, report or workflow through an API or scheduled process, then monitored so its accuracy can be checked as new data arrives.' },
+    ],
+    solutions: [6],
+  },
+  {
+    title: 'Intelligent Process Automation Services',
+    description: 'Automated workflows for leads, approvals, documents, data entry and notifications, connecting your website, CRM, email and AI services to reduce manual work.',
+    question: 'What is intelligent process automation?',
+    answer: 'Intelligent process automation is connecting systems so that repetitive business processes run automatically, with AI added for steps that need understanding, such as classifying an enquiry or extracting data from a document. Primptech builds workflows for lead management, approvals, form and document processing, data entry, notifications and reporting.',
+    faqs: [
+      { q: 'Which business processes can be automated?', a: 'Processes with clear triggers and repeatable steps are good candidates: capturing and assigning leads, follow-up reminders, approval chains, form processing, document handling, data movement between systems, report generation and notifications.' },
+      { q: 'Does every automated workflow need AI?', a: 'No. Many workflows only need rules and integrations. We distinguish conventional automation from AI-powered steps, and add AI only where a step genuinely needs it, such as classifying free-text enquiries.' },
+      { q: 'What systems can an automated workflow connect?', a: 'Websites and web apps, databases, CRM and ERP systems, email, messaging platforms, business APIs, cloud services and AI models, subject to API availability, permissions and technical compatibility.' },
+    ],
+    solutions: [4, 8],
+  },
+  {
+    title: 'Data Engineering & Analytics Services',
+    description: 'Data pipelines, ETL/ELT, database integration, KPI dashboards and business intelligence reporting that turn scattered data into information you can act on.',
+    question: 'What is data engineering and analytics?',
+    answer: 'Data engineering is building the pipelines that collect, clean, transform and consolidate data from different systems; analytics turns that data into dashboards, reports and insight. Primptech builds data pipelines, KPI dashboards and operational, sales and financial reporting.',
+    faqs: [
+      { q: 'What is ETL?', a: 'ETL stands for extract, transform, load: data is extracted from source systems, cleaned and transformed into a consistent structure, then loaded into a database or warehouse for reporting. ELT loads first and transforms inside the destination.' },
+      { q: 'Can you build dashboards from our existing data?', a: 'Yes. We connect to your existing databases and systems where access allows, consolidate the data and build KPI dashboards and automated reports around the measures your team actually uses.' },
+      { q: 'Is data engineering needed before machine learning?', a: 'Often. Models depend on clean, consistent data, so data pipelines and preparation are usually the foundation for predictive analytics and machine learning.' },
+    ],
+    solutions: [6, 0],
+  },
+  {
+    title: 'Mobile App Development: Android, iOS & Cross-Platform',
+    description: 'Android, iOS and cross-platform mobile apps for businesses and consumer products, with authentication, notifications, payments and API integration.',
+    question: 'What does mobile app development include?',
+    answer: 'Mobile app development covers designing, building, testing and publishing applications for Android and iOS phones, either natively or with a cross-platform approach. Primptech builds customer-facing and business apps, including apps for existing web platforms, with features such as registration, profiles, notifications, payments and admin functionality.',
+    faqs: [
+      { q: 'Should we build native or cross-platform?', a: 'Cross-platform development shares one codebase across Android and iOS and suits most business apps. Native development can suit apps that rely heavily on device-specific features or performance. We recommend an approach once the requirements are clear.' },
+      { q: 'Can you build a mobile app for our existing website or platform?', a: 'Yes. Apps for existing web platforms are part of this service; the app connects to the same backend through APIs so data stays consistent.' },
+      { q: 'Do you handle app deployment?', a: 'Yes. Testing and deployment are part of the service, alongside the backend, database connectivity and admin functionality the app depends on.' },
+    ],
+    solutions: [5, 2],
+    project: 2,
+  },
+  {
+    title: 'API Development & System Integration Services',
+    description: 'REST APIs, backend services and third-party integrations that connect your applications, databases, payment gateways, CRM, ERP and AI services.',
+    question: 'What is API development and integration?',
+    answer: 'An API (application programming interface) lets one system exchange data with another. API development is building those interfaces and backend services; integration is connecting existing systems through them. Primptech builds REST APIs and integrates payment gateways, email and notifications, CRM and ERP systems and AI services.',
+    faqs: [
+      { q: 'Why integrate business systems?', a: 'Integration removes duplicate data entry, keeps information consistent across applications, centralizes data and makes workflows easier to automate and expand.' },
+      { q: 'Can you integrate a third-party service without an API?', a: 'Integration depends on what the service exposes. Where there is no API, options such as file exchange may exist, but integrations are always subject to API availability, permissions and technical compatibility.' },
+      { q: 'Do your APIs include authentication?', a: 'Yes. Authentication and access control are part of the APIs and backend services we build.' },
+    ],
+    solutions: [1, 4],
+  },
+  {
+    title: 'Cloud Deployment & Infrastructure Services',
+    description: 'Application deployment, server and VPS setup, cloud hosting, Docker, domains, backups, monitoring and maintenance that keep applications running in production.',
+    question: 'What is cloud deployment and infrastructure?',
+    answer: 'Cloud deployment is taking an application from development into production on servers or cloud hosting, with its database, environment configuration, domain and security in place. Primptech plans architecture, hosting, scalability and expected usage first, then deploys, monitors and maintains applications.',
+    faqs: [
+      { q: 'Do you use Docker?', a: 'Where appropriate. Containers help keep environments consistent, but not every project needs them; the choice depends on the application and hosting.' },
+      { q: 'Can you take over hosting for an existing application?', a: 'Yes. Server configuration, troubleshooting, updates, backup and recovery, and monitoring and maintenance apply to existing applications as well as new ones.' },
+      { q: 'What do you consider before deploying?', a: 'Architecture, hosting, security, scalability and expected usage, so the production setup suits how the application will actually be used.' },
+    ],
+    solutions: [7],
+  },
+  {
+    title: 'UI/UX & Digital Product Design Services',
+    description: 'UI design, UX research, wireframes, user journeys, interactive prototypes and design systems for websites, web apps, dashboards and digital products.',
+    question: 'What is UI/UX design?',
+    answer: 'UX (user experience) design shapes how a product works for the people using it: their journeys, tasks and the structure of information. UI (user interface) design shapes how it looks and responds. Primptech designs interfaces, prototypes and design systems for websites, applications, dashboards and platforms.',
+    faqs: [
+      { q: 'What is the difference between UI and UX?', a: 'UX is about whether a product is useful and easy to use: research, user journeys and structure. UI is the visual and interactive layer: layouts, components, typography and motion. Both are needed for a product that people understand and enjoy using.' },
+      { q: 'Do you provide interactive prototypes?', a: 'Yes. Wireframes and interactive prototypes let you review user journeys and layouts before development starts.' },
+      { q: 'Can you design a dashboard for our data?', a: 'Yes. Dashboard design is part of this service and pairs with our data engineering and analytics work.' },
+    ],
+    solutions: [6, 7],
+  },
+  {
+    title: 'Technology Consulting & Digital Transformation',
+    description: 'Requirement analysis, process assessment, architecture planning, technology selection and automation opportunities, with practical implementation guidance.',
+    question: 'What is digital transformation consulting?',
+    answer: 'Digital transformation consulting is identifying where technology can improve how an organization works, then planning how to implement it. Primptech analyzes requirements and existing processes, finds automation and integration opportunities, plans architecture and technology choices, and guides implementation.',
+    faqs: [
+      { q: 'Where should a digital transformation start?', a: 'With the problem, not the technology: map how work actually happens today, where time or information is lost, and which improvements matter most. That produces a prioritized plan instead of a list of tools.' },
+      { q: 'Can you help us choose a technology stack?', a: 'Yes. Technology selection and architecture planning are part of this service, based on your requirements, existing systems and the skills of the team that will maintain the result.' },
+      { q: 'Do you implement what you recommend?', a: 'We can. Consulting can lead into any of our engineering services, or you can take the plan to your own team with our implementation guidance.' },
+    ],
+    solutions: [0, 9],
+  },
+];
+

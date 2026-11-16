@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Clock, Mail, MapPin, Phone } from 'lucide-react';
 import { BRAND, COMPANY, CONTACT_INTERESTS, CONTACT_TIMELINES, PAGE_IMAGES, QUESTIONS } from '../content';
 import { Link } from '../router';
@@ -9,11 +9,16 @@ type Fields = { name: string; email: string; company: string; phone: string; int
 
 // The site has no mail backend: submitting composes the enquiry in the visitor's own email app (stated next to the button).
 export function ContactPage() {
-  const initialInterest = useMemo(() => {
+  // ?interest=… (from "Discuss this service" links) is read after mount, so the prerendered HTML and the first
+  // client render match during hydration.
+  const [initialInterest, setInitialInterest] = useState('');
+  const [fields, setFields] = useState<Fields>({ name: '', email: '', company: '', phone: '', interest: '', timeline: '', message: '' });
+  useEffect(() => {
     const wanted = new URLSearchParams(window.location.search).get('interest') ?? '';
-    return wanted;
+    if (!wanted) return;
+    setInitialInterest(wanted);
+    setFields((current) => (current.interest ? current : { ...current, interest: wanted }));
   }, []);
-  const [fields, setFields] = useState<Fields>({ name: '', email: '', company: '', phone: '', interest: initialInterest, timeline: '', message: '' });
   const [errors, setErrors] = useState<Partial<Record<keyof Fields, string>>>({});
   const [sent, setSent] = useState(false);
 
@@ -120,6 +125,19 @@ export function ContactPage() {
             </div>
           </aside>
         </div>
+      </Block>
+
+      <Block id="office" label="Visit us" title="Our office in Nagpur" lead={<p>{COMPANY.address}</p>}>
+        <figure className="map glass" data-rv>
+          <iframe
+            src={COMPANY.mapEmbed}
+            title={`Map showing the ${BRAND} office in Nagpur`}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
+          />
+        </figure>
+        <div className="hero__cta" data-rv><Pill href={COMPANY.mapLink}>Open in Google Maps</Pill></div>
       </Block>
 
       <Block label="Before you write" title="Common questions">

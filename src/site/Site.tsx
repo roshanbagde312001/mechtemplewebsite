@@ -51,7 +51,7 @@ function Preloader({ onDone }: { onDone: () => void }) {
   if (state === 'gone') return null;
   return (
     <div className={`loader ${state === 'leave' ? 'loader--leave' : ''}`} aria-hidden="true">
-      <img className="loader__brand" src={LOGO} alt={BRAND} />
+      <img className="loader__brand" src={LOGO} alt="" width={1000} height={468} />
       <span className="loader__count" ref={counter}>000</span>
       <span className="loader__bar"><span ref={bar} /></span>
     </div>
@@ -264,8 +264,8 @@ export function Site() {
           <div className="hero__glow" data-hero-glow aria-hidden="true" />
           <div className="hero__copy">
             <h1 className="hero__title" id="hero-title" aria-label={TAGLINE}>
-              <span aria-hidden="true">{heroLine('Engineering')}</span>
-              <span aria-hidden="true">{heroLine('what comes', 11)}</span>
+              <span aria-hidden="true">{heroLine('Engineering')}</span><span className="rise__sp"> </span>
+              <span aria-hidden="true">{heroLine('what comes', 11)}</span><span className="rise__sp"> </span>
               <span aria-hidden="true">{heroLine('next', 21)}<span className="hero__char hero__dot" style={{ '--i': 25 } as React.CSSProperties}>.</span></span>
             </h1>
             <p className="hero__sub glass"><span>{SUPPORTING}</span></p>

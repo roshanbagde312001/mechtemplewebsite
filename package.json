@@ -9,7 +9,10 @@
     "preview": "vite preview",
     "start": "tsx server.ts",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "seo:test": "tsx scripts/seo-test.ts",
+    "seo:audit": "tsx scripts/seo-audit.ts --base http://localhost:4173 --out seo-reports",
+    "seo:audit:live": "tsx scripts/seo-audit.ts --base https://www.primptech.com --live --out seo-reports/production"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

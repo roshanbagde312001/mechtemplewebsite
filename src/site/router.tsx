@@ -1,11 +1,16 @@
 // Minimal client-side router: real URLs (/about, /services/...) on top of the History API, no dependency.
-// The dev server (appType 'spa') and server.ts in production both fall back to index.html for unknown paths.
+// Every route is prerendered to <route>/index.html at build time; unknown paths get the static 404.html (HTTP 404).
 import React, { useEffect, useState } from 'react';
 
 const EVENT = 'app:navigate';
 
+// Path used when rendering outside the browser (build-time prerender, see src/entry-server.tsx).
+let serverPath = '/';
+export const setServerPath = (path: string) => { serverPath = path; };
+
 /** Current pathname without a trailing slash (except the root). */
 const readPath = () => {
+  if (typeof window === 'undefined') return serverPath;
   const path = window.location.pathname.replace(/\/+$/, '');
   return path === '' ? '/' : path;
 };

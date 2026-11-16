@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { ArrowUpRight, Briefcase, Building2, Factory, GraduationCap, Rocket, Store, Users } from 'lucide-react';
 import {
-  AI_APPROACH, CAPABILITIES, CUSTOMERS_B2B, CUSTOMERS_B2C, INDUSTRIES, INDUSTRY_PHOTOS, LIFECYCLE, PAGE_IMAGES, PAGE_VIDEOS, QUESTIONS, SERVICE_CATEGORY,
-  SERVICE_IMAGES, SERVICES, SOLUTION_IMAGES, SOLUTIONS, VIDEOS, WORKFLOW, serviceSlug, altFor,
+  AI_APPROACH, CAPABILITIES, CUSTOMERS_B2B, CUSTOMERS_B2C, INDUSTRIES, INDUSTRY_PHOTOS, LIFECYCLE, PAGE_IMAGES, PAGE_VIDEOS, PROJECTS, SERVICE_CATEGORY,
+  SERVICE_IMAGES, SERVICE_SEO, SERVICES, SOLUTION_IMAGES, SOLUTIONS, VIDEOS, WORKFLOW, serviceSlug, altFor,
 } from '../content';
 import { Link } from '../router';
 import { Pill, pad } from '../ui';
@@ -78,6 +78,8 @@ export function ServiceDetailPage({ slug }: { slug: string }) {
   const service = SERVICES[index];
   if (!service) return <NotFoundPage />;
 
+  const seo = SERVICE_SEO[index];
+  const project = seo.project !== undefined ? PROJECTS[seo.project] : null;
   const category = CAPABILITIES[SERVICE_CATEGORY[index]];
   const related = SERVICES.map((s, i) => ({ s, i })).filter(({ i }) => i !== index && SERVICE_CATEGORY[i] === SERVICE_CATEGORY[index]);
   const fill = SERVICES.map((s, i) => ({ s, i })).filter(({ i }) => i !== index && !related.some((r) => r.i === i));
@@ -97,6 +99,12 @@ export function ServiceDetailPage({ slug }: { slug: string }) {
         <Pill to={`/contact?interest=${encodeURIComponent(service.title)}`}>Discuss this service</Pill>
         <Pill to="/services" variant="ghost">All services</Pill>
       </PageHero>
+
+      <Block label="In short" title={seo.question} className="answer">
+        <div className="prose answer__body" data-rv>
+          <p>{seo.answer}</p>
+        </div>
+      </Block>
 
       <Block label="Scope" title="What this covers">
         <div className="scope-grid">
@@ -155,9 +163,34 @@ export function ServiceDetailPage({ slug }: { slug: string }) {
         </ul>
       </Block>
 
-      <Block label="Questions" title="Worth asking first">
+      <Block label="Where it is used" title="Solutions built with this service" lead={<p>{service.title} is rarely used on its own. These are complete systems it is part of{project ? <>, and the <Link to="/work">project</Link> where it applies</> : null}.</p>}>
+        <ul className="link-grid">
+          {seo.solutions.map((i) => (
+            <li key={SOLUTIONS[i].title} data-rv>
+              <Link className="link-card glass" to={`/solutions#solution-${i + 1}`}>
+                <small>Solution {pad(i + 1)}</small>
+                <strong>{SOLUTIONS[i].title}</strong>
+                <span>{SOLUTIONS[i].description}</span>
+                <em>View solution <ArrowUpRight size={14} /></em>
+              </Link>
+            </li>
+          ))}
+          {project && (
+            <li data-rv>
+              <Link className="link-card glass" to="/work">
+                <small>Work · {project.category}</small>
+                <strong>{project.name}</strong>
+                <span>{project.description}</span>
+                <em>See our work <ArrowUpRight size={14} /></em>
+              </Link>
+            </li>
+          )}
+        </ul>
+      </Block>
+
+      <Block label="Questions" title={`${service.title}: frequently asked questions`}>
         <dl className="faq-list">
-          {QUESTIONS.slice(0, 4).map((item) => <div key={item.q} className="glass" data-rv><dt>{item.q}</dt><dd>{item.a}</dd></div>)}
+          {seo.faqs.map((item) => <div key={item.q} className="glass" data-rv><dt>{item.q}</dt><dd>{item.a}</dd></div>)}
         </dl>
       </Block>
 
@@ -236,7 +269,7 @@ export function SolutionsPage() {
         </article>
       </Block>
 
-      <Block label="All solutions" title={'Nine more systems\nwe can engineer.'} lead={<p>Each card lists possible modules. Your version includes the ones your organisation actually needs.</p>}>
+      <Block label="All solutions" title={'Nine more systems\nwe can engineer.'} lead={<p>Each card lists possible modules. Your version includes the ones your organisation actually needs, shaped by the <Link to="/industries">industry you work in</Link>.</p>}>
         <div className="sol-grid">
           {rest.map((i) => <SolutionCard key={i} index={i} />)}
         </div>
@@ -278,7 +311,7 @@ export function IndustriesPage() {
         title={'Different industries.\nDistinct ways of working.'}
         image={PAGE_IMAGES.industries}
         video={PAGE_VIDEOS.industries}
-        intro={<p>We build applications around each domain's requirements: the people involved, the processes they follow and the systems they already use.</p>}
+        intro={<p>We build applications around each domain's requirements: the people involved, the processes they follow and the systems they already use. See the <Link to="/solutions">business solutions</Link> we engineer for them, or the <Link to="/services">services</Link> behind each one.</p>}
       />
 
       <Block>

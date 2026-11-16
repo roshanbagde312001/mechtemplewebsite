@@ -8,16 +8,25 @@ export const pad = (value: number) => String(value).padStart(2, '0');
 /** Headline whose words rise from behind a mask as it enters view (the `in` class is added by the reveal observer). */
 export function Rise({ text, as: Tag = 'h2', className = '', id }: { text: string; as?: 'h1' | 'h2' | 'h3' | 'p'; className?: string; id?: string }) {
   const lines = text.split('\n');
+  const total = text.split(/\s+/).length;
   let index = 0;
+  // Each word sits in its own mask, so real spaces are added between words (zero-width, see .rise__sp): the heading's
+  // text then reads "Services built around…" for search engines, copy-paste and reader modes, not "Servicesbuiltaround…".
   return (
     <Tag className={`rise ${className}`} id={id} data-h aria-label={text.replace(/\n/g, ' ')}>
       {lines.map((line, lineIndex) => (
         <span className="rise__line" key={lineIndex} aria-hidden="true">
-          {line.split(' ').map((word, wordIndex) => (
-            <span className="rise__mask" key={wordIndex}>
-              <span className="rise__word" style={{ transitionDelay: `${index++ * 55}ms` }}>{word}</span>
-            </span>
-          ))}
+          {line.split(' ').map((word, wordIndex) => {
+            const position = index++;
+            return (
+              <React.Fragment key={wordIndex}>
+                <span className="rise__mask">
+                  <span className="rise__word" style={{ transitionDelay: `${position * 55}ms` }}>{word}</span>
+                </span>
+                {position < total - 1 && <span className="rise__sp"> </span>}
+              </React.Fragment>
+            );
+          })}
         </span>
       ))}
     </Tag>

@@ -75,7 +75,7 @@ export function SiteFooter({ inner = false }: { inner?: boolean }) {
       <div className="foot__planet" aria-hidden="true" />
       <div className="foot__top">
         <div className="foot__brand">
-          <img className="foot__logo" src={LOGO} alt={BRAND} loading="lazy" />
+          <img className="foot__logo" src={LOGO} alt={BRAND} width={1000} height={468} loading="lazy" decoding="async" />
           <p className="foot__title"><span>{TAGLINE}</span></p>
         </div>
         <Pill to="/contact">Start a project</Pill>

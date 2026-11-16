@@ -4,36 +4,62 @@ import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { defineConfig, type Plugin } from 'vite';
-import { BRAND, SERVICES, SHORT_DESCRIPTION, COMPANY } from './src/site/content';
-import { NOT_FOUND, ROUTES, SITE_URL, absolute, renderHead } from './src/site/seo';
+import { execSync } from 'node:child_process';
+import {
+  BRAND, COMMITMENTS, COMPANY, FOUNDER, INDUSTRIES, LIFECYCLE, MEDIUM_DESCRIPTION, PROJECTS, SERVICES, SERVICE_SEO, SHORT_DESCRIPTION, SOLUTIONS, serviceSlug,
+} from './src/site/content';
+import { BRAND_ALIASES, NOT_FOUND, ROUTES, SITE_URL, absolute, renderHead } from './src/site/seo';
 
 /**
  * Production-only: writes a static HTML file per route with its own <head> (title, description, canonical,
- * Open Graph/Twitter tags, JSON-LD), plus 404.html, sitemap.xml, robots.txt and llms.txt, then pre-compresses
- * text assets (.br/.gz) for server.ts to serve. Route data comes from src/site/seo.ts.
+ * Open Graph/Twitter tags, JSON-LD) and its prerendered <body> content (src/entry-server.tsx), plus 404.html,
+ * sitemap.xml, robots.txt and llms.txt, then pre-compresses text assets (.br/.gz) for server.ts to serve.
+ * Route data comes from src/site/seo.ts.
  */
+
+/** Date of the last commit touching site content or code; the build date only if git is unavailable. */
+function lastContentChange(root: string) {
+  try {
+    const iso = execSync('git log -1 --format=%cI -- src public index.html', { cwd: root, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    if (iso) return iso.slice(0, 10);
+  } catch { /* not a git checkout (e.g. some CI caches) */ }
+  return new Date().toISOString().slice(0, 10);
+}
 function seoPages(): Plugin {
   let outDir = 'dist';
+  let root = process.cwd();
   return {
     name: 'primptech-seo-pages',
     apply: 'build',
-    configResolved(config) { outDir = path.resolve(config.root, config.build.outDir); },
-    closeBundle() {
+    configResolved(config) { root = config.root; outDir = path.resolve(config.root, config.build.outDir); },
+    async closeBundle() {
       const template = fs.readFileSync(path.join(outDir, 'index.html'), 'utf8');
       const marker = /<!--seo:head-->[\s\S]*?<!--\/seo:head-->/;
+      const rootDiv = '<div id="root"></div>';
       if (!marker.test(template)) throw new Error('index.html is missing the <!--seo:head--> marker');
+      if (!template.includes(rootDiv)) throw new Error(`index.html is missing ${rootDiv}`);
       const write = (file: string, content: string) => {
         fs.mkdirSync(path.dirname(file), { recursive: true });
         fs.writeFileSync(file, content);
       };
 
-      for (const route of ROUTES) {
-        const file = route.path === '/' ? path.join(outDir, 'index.html') : path.join(outDir, route.path.slice(1), 'index.html');
-        write(file, template.replace(marker, renderHead(route)));
+      // Prerender each page's body with React, loaded through Vite's SSR module loader (same source as the client bundle).
+      const { createServer } = await import('vite');
+      const ssr = await createServer({ root, logLevel: 'error', appType: 'custom', server: { middlewareMode: true, hmr: false, ws: false, watch: null } });
+      try {
+        const { render } = await ssr.ssrLoadModule('/src/entry-server.tsx') as { render: (path: string) => Promise<string> };
+        for (const route of [...ROUTES, NOT_FOUND]) {
+          const body = await render(route.path);
+          if (!body.includes('<h1')) throw new Error(`Prerendered ${route.path} has no <h1>`);
+          const html = template.replace(marker, () => renderHead(route)).replace(rootDiv, () => `<div id="root">${body}</div>`);
+          const file = route === NOT_FOUND ? path.join(outDir, '404.html') : route.path === '/' ? path.join(outDir, 'index.html') : path.join(outDir, route.path.slice(1), 'index.html');
+          write(file, html);
+        }
+      } finally {
+        await ssr.close();
       }
-      write(path.join(outDir, '404.html'), template.replace(marker, renderHead(NOT_FOUND)));
 
-      const lastmod = new Date().toISOString().slice(0, 10);
+      const lastmod = lastContentChange(root);
       write(path.join(outDir, 'sitemap.xml'), [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
@@ -42,30 +68,67 @@ function seoPages(): Plugin {
         '',
       ].join('\n'));
 
-      write(path.join(outDir, 'robots.txt'), ['User-agent: *', 'Allow: /', 'Disallow: /api/', '', `Sitemap: ${SITE_URL}/sitemap.xml`, ''].join('\n'));
+      // robots.txt: everything public is crawlable, including by AI search crawlers (no bot-specific blocks). /api/ only
+      // exists on the Node server (server.ts) and has nothing to index. Disallow does not remove URLs from an index.
+      write(path.join(outDir, 'robots.txt'), [
+        `# robots.txt for ${SITE_URL}`,
+        'User-agent: *',
+        'Allow: /',
+        'Disallow: /api/',
+        '',
+        `Sitemap: ${SITE_URL}/sitemap.xml`,
+        '',
+      ].join('\n'));
 
-      // llms.txt (https://llmstxt.org): a plain-language map of the site for AI assistants and crawlers.
+      // llms.txt (https://llmstxt.org): a plain-language map of the site for AI assistants. Every line comes from
+      // content.ts / seo.ts, the same verified copy the pages show.
       const section = (name: string) => ROUTES.filter((route) => route.group === name).map((route) => `- [${route.heading}](${absolute(route.path)}): ${route.description}`);
       write(path.join(outDir, 'llms.txt'), [
         `# ${BRAND}`,
         '',
         `> ${SHORT_DESCRIPTION}`,
         '',
-        `${BRAND} works across ${SERVICES.length} services: ${SERVICES.map((service) => service.title).join(', ')}. Custom development is the core offering; products are presented as available only once they are developed, tested and ready.`,
+        ...MEDIUM_DESCRIPTION.flatMap((paragraph) => [paragraph, '']),
+        '## Company facts',
+        `- Name: ${BRAND} (also written ${BRAND_ALIASES.join(', ')})`,
+        `- Website: ${absolute('/')}`,
+        `- Type: AI, software engineering and automation company; custom development is the core offering`,
+        `- Founder: ${FOUNDER.name} (${FOUNDER.role}); focus: ${FOUNDER.focus}`,
+        `- Email: ${COMPANY.email}`,
+        `- Contact page: ${absolute('/contact')}`,
+        ...(COMPANY.phone ? [`- Phone: ${COMPANY.phone}`] : []),
+        ...(COMPANY.address ? [`- Address: ${COMPANY.address}`] : []),
+        ...COMPANY.socials.map((social) => `- ${social.label}: ${social.href}`),
         '',
-        `Contact: ${COMPANY.email}`,
+        '## Services',
+        ...SERVICES.map((service, i) => `- [${service.title}](${absolute(`/services/${serviceSlug(i)}`)}): ${SERVICE_SEO[i].answer}`),
+        '',
+        '## Solutions (systems built by combining services; engineered per customer, not sold off the shelf)',
+        ...SOLUTIONS.map((solution, i) => `- [${solution.title}](${absolute('/solutions')}#solution-${i + 1}): ${solution.description}`),
+        '',
+        '## Industries',
+        `Details: ${absolute('/industries')}`,
+        ...INDUSTRIES.map((industry) => `- ${industry}`),
+        '',
+        '## Work (products and projects in development; no client results are claimed)',
+        ...PROJECTS.map((project) => `- ${project.name} (${project.category}): ${project.description}`),
+        '',
+        '## Delivery process',
+        `Details: ${absolute('/process')}`,
+        ...LIFECYCLE.map((stage, i) => `${i + 1}. ${stage.title}: ${stage.items.join(', ')}`),
+        '',
+        '## Commitments (how the company describes its work)',
+        ...COMMITMENTS.map((item) => `- ${item.title}: ${item.detail}`),
         '',
         '## Main pages',
         ...section('Main'),
         '',
-        '## Services',
-        ...section('Services'),
-        '',
-        '## Company',
+        '## Company pages',
         ...section('Company'),
         '',
         '## Optional',
         ...section('Legal'),
+        `- [Sitemap](${SITE_URL}/sitemap.xml)`,
         '',
       ].join('\n'));
 

@@ -56,6 +56,7 @@ main { position: relative; z-index: 2; }
 
 .rise__line { display: block; }
 .rise__mask { display: inline-block; overflow: hidden; vertical-align: top; padding: 0.05em 0.07em 0.14em 0; margin-bottom: -0.14em; margin-right: 0.13em; }
+.rise__sp { font-size: 0; }
 .rise__word { display: inline-block; transform: translateY(112%) rotate(5deg); transform-origin: left top; transition: transform 1.15s var(--expo); }
 .in .rise__word, .rise.in .rise__word { transform: none; }
 
@@ -149,7 +150,7 @@ main { position: relative; z-index: 2; }
 @keyframes hero-zoom { to { scale: 1.08; } }
 .hero__copy { position: relative; z-index: 1; }
 .hero__title { font-size: clamp(2.8rem, 9.4vw, 8.6rem); line-height: 0.92; }
-.hero__title > span { display: block; overflow: hidden; padding-bottom: 0.06em; margin-bottom: -0.06em; white-space: nowrap; }
+.hero__title > span:not(.rise__sp) { display: block; overflow: hidden; padding-bottom: 0.06em; margin-bottom: -0.06em; white-space: nowrap; }
 .hero__char { display: inline-block; opacity: 0; transform: translateY(100%) rotate(8deg); transform-origin: left bottom; }
 [data-ready="true"] .hero__char { animation: char-in 1.2s var(--expo) calc(var(--i) * 42ms + 120ms) forwards; }
 .hero__dot { color: var(--accent); }
