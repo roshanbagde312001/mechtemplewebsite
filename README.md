@@ -1,6 +1,6 @@
-# Korvantage Solutions website
+# PrimpTech website
 
-A scroll-driven marketing site built with React, TypeScript, Vite and Three.js.
+The website for PrimpTech (https://www.primptech.com): a scroll-driven site built with React, TypeScript, Vite and Three.js, prerendered page by page for search engines and deployed on Vercel.
 
 ## Run locally
 
@@ -22,7 +22,11 @@ npm run build
 
 ## Where things live
 
-- `src/site/content.ts`: all site copy, services, projects, contact email.
+- `src/site/content.ts`: all site copy, services, projects, company details, per-service SEO copy (`SERVICE_SEO`).
+- `src/site/resources.ts`: guides published under /resources (set `status: 'draft'` to keep one off the site).
+- `src/site/seo.ts`: every public URL with its title, description, canonical, share image and structured data.
+- `src/entry-server.tsx` + `vite.config.ts`: build-time prerendering, sitemap.xml, robots.txt, llms.txt, llms-full.txt.
+- `src/site/analytics.ts`: Google Analytics 4, only when `VITE_GA_MEASUREMENT_ID` is set at build time.
 - `src/site/Site.tsx`: page structure, menu, project dialog, FAQ, lead workflow demo.
 - `src/site/motion.ts`: smooth scrolling and every scroll or pointer effect, run from one animation loop.
 - `src/site/stage.ts`: the single WebGL canvas: chrome shapes, robot tunnel, closing terrain.
@@ -45,3 +49,12 @@ Both load after the page appears. The stills in `public/assets/posters` show unt
 ## Content rules
 
 Figures in the "How we work" section are counts of what is listed on the page. Do not add client names, client logos or performance numbers without evidence.
+
+## SEO checks
+
+- `npm run seo:test`: builds, serves `dist/` locally and audits every page (must report 0 FAIL before deploying).
+- `npm run seo:audit:live`: audits https://www.primptech.com after a deploy.
+- `npx tsx scripts/cwv-lab.ts <url>`: lab Core Web Vitals (mobile throttling) with the local Chrome.
+- New share images: `npx tsx scripts/og-routes.ts > og.json && python3 scripts/generate-og-images.py og.json` (only pages without an image).
+
+Reports and setup guides are in `seo-reports/` (start with `SEO_FINAL_REPORT.md` and `REMAINING_ACTIONS.md`).

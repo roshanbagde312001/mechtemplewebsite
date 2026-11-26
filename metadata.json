@@ -1,6 +1,6 @@
 {
-  "name": "Primptech",
-  "description": "Primptech website: AI, software engineering and automation company.",
+  "name": "PrimpTech",
+  "description": "PrimpTech website: AI, software engineering and automation company.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

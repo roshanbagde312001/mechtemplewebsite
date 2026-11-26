@@ -1,0 +1,86 @@
+{
+  "measuredAt": "2026-11-26T05:10:59.005Z",
+  "profile": "mobile, 4x CPU, 1.6 Mbps/150 ms",
+  "results": [
+    {
+      "url": "http://localhost:4173/",
+      "runs": 3,
+      "lcpMs": 772,
+      "cls": 0.018,
+      "fcpMs": 772,
+      "ttfbMs": 3,
+      "tbtMs": 1336,
+      "lcpElement": "span.loader__count",
+      "transferKb": {
+        "Document": 14,
+        "Stylesheet": 11,
+        "Script": 235,
+        "Manifest": 1,
+        "Font": 110,
+        "Image": 780,
+        "Other": 11
+      },
+      "totalKb": 1162
+    },
+    {
+      "url": "http://localhost:4173/services/website-development",
+      "runs": 3,
+      "lcpMs": 1524,
+      "cls": 0.001,
+      "fcpMs": 696,
+      "ttfbMs": 4,
+      "tbtMs": 0,
+      "lcpElement": "img",
+      "transferKb": {
+        "Document": 7,
+        "Stylesheet": 15,
+        "Script": 99,
+        "Manifest": 1,
+        "Font": 110,
+        "Image": 132,
+        "Other": 11
+      },
+      "totalKb": 375
+    },
+    {
+      "url": "http://localhost:4173/contact",
+      "runs": 3,
+      "lcpMs": 2400,
+      "cls": 0.001,
+      "fcpMs": 680,
+      "ttfbMs": 3,
+      "tbtMs": 0,
+      "lcpElement": "img",
+      "transferKb": {
+        "Document": 5,
+        "Stylesheet": 15,
+        "Script": 99,
+        "Manifest": 1,
+        "Font": 110,
+        "Image": 187,
+        "Other": 11
+      },
+      "totalKb": 429
+    },
+    {
+      "url": "http://localhost:4173/resources/custom-software-vs-off-the-shelf-software",
+      "runs": 3,
+      "lcpMs": 2156,
+      "cls": 0.004,
+      "fcpMs": 672,
+      "ttfbMs": 2,
+      "tbtMs": 0,
+      "lcpElement": "img",
+      "transferKb": {
+        "Document": 7,
+        "Stylesheet": 15,
+        "Script": 99,
+        "Manifest": 1,
+        "Font": 110,
+        "Image": 172,
+        "Other": 11
+      },
+      "totalKb": 414
+    }
+  ]
+}

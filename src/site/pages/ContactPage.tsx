@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Clock, Mail, MapPin, Phone } from 'lucide-react';
-import { BRAND, COMPANY, CONTACT_INTERESTS, CONTACT_TIMELINES, PAGE_IMAGES, QUESTIONS } from '../content';
+import { ANALYTICS_ENABLED, BRAND, COMPANY, CONTACT_INTERESTS, CONTACT_TIMELINES, PAGE_IMAGES, QUESTIONS } from '../content';
 import { Link } from '../router';
 import { Pill } from '../ui';
 import { Block, PageHero } from './Layout';
@@ -46,6 +46,7 @@ export function ContactPage() {
       fields.timeline ? `Timeline: ${fields.timeline}` : '',
     ].filter(Boolean);
     const body = `${details.join('\n')}\n\n${fields.message.trim()}`;
+    if (ANALYTICS_ENABLED) import('../analytics').then(({ trackEvent }) => trackEvent('generate_lead', { interest: fields.interest || 'unspecified', timeline: fields.timeline || 'unspecified' })).catch(() => {});
     window.location.href = `mailto:${COMPANY.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     setSent(true);
   };

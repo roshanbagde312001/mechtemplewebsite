@@ -2,7 +2,8 @@
 // structured data. Used in the browser (applyHead on navigation) and at build time (vite.config.ts writes a
 // static HTML file per route plus sitemap.xml, robots.txt, llms.txt and 404.html from the same data).
 // Keep this file free of browser-only globals at module level: it also runs in Node during the build.
-import { BRAND, CAPABILITIES, COMPANY, FOUNDER, QUESTIONS, SERVICES, SERVICE_SEO, SHORT_DESCRIPTION, TAGLINE, serviceSlug } from './content';
+import { ANALYTICS_ENABLED, BRAND, MARKETS, CAPABILITIES, COMPANY, FOUNDER, QUESTIONS, SERVICES, SERVICE_COUNT, SERVICE_SEO, SHORT_DESCRIPTION, TAGLINE, serviceSlug } from './content';
+import { ARTICLES, plainText } from './resources';
 
 /**
  * Production origin, without a trailing slash. This must be the host that answers 200: the apex
@@ -11,12 +12,12 @@ import { BRAND, CAPABILITIES, COMPANY, FOUNDER, QUESTIONS, SERVICES, SERVICE_SEO
 export const SITE_URL = 'https://www.primptech.com';
 export const DEFAULT_OG = '/og/home.jpg';
 /** Spellings of the brand used elsewhere (logo file, documents). Declared so search engines treat them as one entity. */
-export const BRAND_ALIASES = ['PrimpTech', 'PRIMPTECH'];
+export const BRAND_ALIASES = ['Primptech', 'PRIMPTECH'];
 
 export type Crumb = { name: string; path: string };
 export type RouteMeta = {
   path: string;
-  /** Text before " | Primptech" in the browser tab; the home page uses its own full title. */
+  /** Text before " | PrimpTech" in the browser tab; the home page uses its own full title. */
   title: string;
   description: string;
   /** Share image path (1200x630). */
@@ -25,8 +26,10 @@ export type RouteMeta = {
   heading: string;
   crumbs: Crumb[];
   /** Section for llms.txt grouping. */
-  group: 'Main' | 'Services' | 'Company' | 'Legal';
-  kind?: 'service' | 'faq';
+  group: 'Main' | 'Services' | 'Resources' | 'Company' | 'Legal';
+  kind?: 'service' | 'faq' | 'article';
+  /** ISO date the content last changed (sitemap lastmod, dateModified). Falls back to the last content commit. */
+  lastmod?: string;
   /** schema.org WebPage subtype for this URL. */
   pageType?: 'WebPage' | 'AboutPage' | 'ContactPage' | 'CollectionPage';
   index?: number;
@@ -46,11 +49,11 @@ const page = (path: string, title: string, heading: string, description: string,
 });
 
 export const ROUTES: RouteMeta[] = [
-  page('/', `${BRAND} | AI, Software Engineering & Automation Company`, TAGLINE.replace(/\.$/, ''),
-    `${BRAND} designs, develops and deploys custom software, web and mobile apps, AI assistants, automated workflows and data systems for businesses and startups.`,
+  page('/', `${BRAND} | Software Development, AI & Automation Company`, TAGLINE.replace(/\.$/, ''),
+    `${BRAND} builds custom software, business websites, AI applications and intelligent automation that help businesses in India and worldwide innovate and scale.`,
     'Main', { changefreq: 'weekly', priority: 1 }),
   page('/services', 'Software Development, AI & Automation Services', 'Services',
-    'Twelve services: websites and web apps, custom software, AI and machine learning, process automation, data engineering, mobile apps, APIs, cloud and consulting.',
+    `${SERVICE_COUNT} services: websites, web apps, SaaS and custom software, AI and machine learning, process automation, data, mobile apps, APIs, cloud and consulting.`,
     'Main', { priority: 0.9, pageType: 'CollectionPage' }),
   ...SERVICES.map((service, i) => page(`/services/${serviceSlug(i)}`, SERVICE_SEO[i].title, service.title, SERVICE_SEO[i].description, 'Services', {
     crumbs: [{ name: 'Services', path: '/services' }, { name: service.title, path: `/services/${serviceSlug(i)}` }],
@@ -77,7 +80,18 @@ export const ROUTES: RouteMeta[] = [
   page('/contact', 'Contact Us: Start a Software or AI Project', 'Contact',
     `Contact ${BRAND} about a software, AI, automation or data project. Tell us the problem you want to solve and we will reply with questions and a next step.`,
     'Company', { priority: 0.8, pageType: 'ContactPage' }),
-  page('/privacy', 'Privacy Policy: How We Handle Your Data', 'Privacy policy', `How the ${BRAND} website handles personal information: no accounts, no analytics trackers, and a contact form that opens your own email app.`, 'Legal', { changefreq: 'yearly', priority: 0.3 }),
+  page('/privacy', 'Privacy Policy: How We Handle Your Data', 'Privacy policy', ANALYTICS_ENABLED
+    ? `How the ${BRAND} website handles personal information: no accounts, cookieless Google Analytics measurement, and a contact form that opens your own email app.`
+    : `How the ${BRAND} website handles personal information: no accounts, no analytics trackers, and a contact form that opens your own email app.`, 'Legal', { changefreq: 'yearly', priority: 0.3 }),
+  ...(ARTICLES.length ? [
+    page('/resources', 'Guides: Software Development, AI & Automation', 'Resources',
+      `Practical guides from ${BRAND} on custom software, business process automation, AI and web development: plain-language answers for business owners and teams.`,
+      'Resources', { pageType: 'CollectionPage', lastmod: ARTICLES[0].updated }),
+    ...ARTICLES.map((article) => page(`/resources/${article.slug}`, article.seoTitle, article.title, article.description, 'Resources', {
+      crumbs: [{ name: 'Resources', path: '/resources' }, { name: article.title, path: `/resources/${article.slug}` }],
+      kind: 'article' as const, lastmod: article.updated, priority: 0.6,
+    })),
+  ] : []),
   page('/terms', 'Terms of Use for the Website', 'Terms of use', `The terms that apply when you use the ${BRAND} website, including intellectual property, acceptable use and limitation of liability.`, 'Legal', { changefreq: 'yearly', priority: 0.3 }),
 ].map((route) => (route.path === '/privacy' || route.path === '/terms' ? { ...route, image: DEFAULT_OG } : route));
 
@@ -98,6 +112,8 @@ const WEBSITE_ID = `${SITE_URL}/#website`;
 const BUSINESS_ID = `${SITE_URL}/#business`;
 export const FOUNDER_ID = `${SITE_URL}/about#founder`;
 const LOGO_PNG = '/assets/brand/logo.png';
+/** Markets from the business brief: India first, then international. Used as schema.org areaServed. */
+const AREA_SERVED = MARKETS.map((name) => ({ '@type': 'Country', name }));
 
 /** Organization, founder and website entities, present on every page. */
 export function siteSchema() {
@@ -115,7 +131,8 @@ export function siteSchema() {
     slogan: TAGLINE,
     founder: { '@id': FOUNDER_ID },
     knowsAbout: CAPABILITIES.map((cap) => cap.title),
-    contactPoint: { '@type': 'ContactPoint', contactType: 'sales', email: COMPANY.email, url: absolute('/contact'), availableLanguage: 'English' },
+    areaServed: AREA_SERVED,
+    contactPoint: { '@type': 'ContactPoint', contactType: 'sales', email: COMPANY.email, url: absolute('/contact'), availableLanguage: 'English', areaServed: AREA_SERVED },
     hasOfferCatalog: {
       '@type': 'OfferCatalog',
       name: `${BRAND} services`,
@@ -147,7 +164,7 @@ export function siteSchema() {
     graph.push({
       '@type': 'ProfessionalService', '@id': BUSINESS_ID, name: BRAND, url: absolute('/'), image: absolute(DEFAULT_OG), logo: absolute(LOGO_PNG),
       email: COMPANY.email, description: SHORT_DESCRIPTION, parentOrganization: { '@id': ORG_ID }, address: postalAddress,
-      hasMap: COMPANY.mapLink, areaServed: 'Worldwide', knowsAbout: CAPABILITIES.map((cap) => cap.title),
+      hasMap: COMPANY.mapLink, areaServed: AREA_SERVED, knowsAbout: CAPABILITIES.map((cap) => cap.title),
       ...(COMPANY.phone ? { telephone: COMPANY.phone } : {}), ...(sameAs.length ? { sameAs } : {}),
     });
   }
@@ -158,6 +175,7 @@ export function siteSchema() {
 export function routeSchema(route: RouteMeta) {
   const url = absolute(route.path);
   const isService = route.kind === 'service' && route.index !== undefined;
+  const article = route.kind === 'article' ? ARTICLES.find((a) => `/resources/${a.slug}` === route.path) ?? null : null;
   const webPage: Record<string, unknown> = {
     '@type': route.pageType ?? 'WebPage',
     '@id': `${url}#webpage`,
@@ -174,6 +192,11 @@ export function routeSchema(route: RouteMeta) {
   };
   if (isService) webPage.mainEntity = { '@id': `${url}#service` };
   if (route.pageType === 'AboutPage') webPage.mainEntity = { '@id': ORG_ID };
+  if (article) { webPage.mainEntity = { '@id': `${url}#article` }; webPage.about = { '@id': `${url}#article` }; }
+  if (route.lastmod) webPage.dateModified = route.lastmod;
+  if (route.path === '/resources') {
+    webPage.mainEntity = { '@type': 'ItemList', itemListElement: ARTICLES.map((a, i) => ({ '@type': 'ListItem', position: i + 1, url: absolute(`/resources/${a.slug}`), name: a.title })) };
+  }
   const graph: Record<string, unknown>[] = [webPage];
 
   if (route.crumbs.length) {
@@ -186,7 +209,29 @@ export function routeSchema(route: RouteMeta) {
     });
   }
 
-  const faqs = isService ? SERVICE_SEO[route.index!].faqs : route.kind === 'faq' ? QUESTIONS : [];
+  const faqs = isService ? SERVICE_SEO[route.index!].faqs : article ? article.faqs : route.kind === 'faq' ? QUESTIONS : [];
+  if (article) {
+    // Article: the guide itself. Author is the company (no individual byline has been approved).
+    graph.push({
+      '@type': 'Article',
+      '@id': `${url}#article`,
+      headline: article.title,
+      description: article.description,
+      abstract: plainText(article.summary),
+      url,
+      mainEntityOfPage: { '@id': `${url}#webpage` },
+      image: { '@type': 'ImageObject', url: absolute(route.image), width: 1200, height: 630 },
+      datePublished: article.published,
+      dateModified: article.updated,
+      author: { '@id': ORG_ID },
+      publisher: { '@id': ORG_ID },
+      inLanguage: 'en',
+      articleSection: article.category,
+      keywords: article.keyword,
+      about: article.services.map((i) => ({ '@id': `${absolute(`/services/${serviceSlug(i)}`)}#service` })),
+      ...(article.sources?.length ? { citation: article.sources.map((source) => source.url) } : {}),
+    });
+  }
   if (isService) {
     const service = SERVICES[route.index!];
     graph.push({
@@ -198,6 +243,7 @@ export function routeSchema(route: RouteMeta) {
       url,
       image: absolute(route.image),
       provider: { '@id': ORG_ID },
+      areaServed: AREA_SERVED,
       hasOfferCatalog: {
         '@type': 'OfferCatalog',
         name: service.title,

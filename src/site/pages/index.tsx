@@ -4,10 +4,12 @@ import { PageLayout } from './Layout';
 import { AboutPage, CareersPage, ProcessPage, WorkPage } from './CompanyPages';
 import { ContactPage } from './ContactPage';
 import { NotFoundPage, PrivacyPage, TermsPage } from './LegalPages';
+import { ArticlePage, ResourcesPage } from './ResourcePages';
 import { IndustriesPage, ServiceDetailPage, ServicesPage, SolutionsPage } from './ServicePages';
 
 function route(path: string) {
   if (path.startsWith('/services/')) return <ServiceDetailPage key={path} slug={path.slice('/services/'.length)} />;
+  if (path.startsWith('/resources/')) return <ArticlePage key={path} slug={path.slice('/resources/'.length)} />;
   switch (path) {
     case '/about': return <AboutPage />;
     case '/services': return <ServicesPage />;
@@ -17,6 +19,7 @@ function route(path: string) {
     case '/process': return <ProcessPage />;
     case '/careers': return <CareersPage />;
     case '/contact': return <ContactPage />;
+    case '/resources': return <ResourcesPage />;
     case '/privacy': return <PrivacyPage />;
     case '/terms': return <TermsPage />;
     default: return <NotFoundPage />;

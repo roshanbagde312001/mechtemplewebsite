@@ -1,11 +1,11 @@
 {
-  "name": "Primptech",
-  "short_name": "Primptech",
+  "name": "PrimpTech",
+  "short_name": "PrimpTech",
   "description": "AI, software engineering and automation company.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#000000",
+  "background_color": "#ffffff",
   "theme_color": "#000000",
   "icons": [
     { "src": "/assets/brand/icon-192.png", "sizes": "192x192", "type": "image/png" },

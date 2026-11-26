@@ -6,9 +6,10 @@ import zlib from 'node:zlib';
 import { defineConfig, type Plugin } from 'vite';
 import { execSync } from 'node:child_process';
 import {
-  BRAND, COMMITMENTS, COMPANY, FOUNDER, INDUSTRIES, LIFECYCLE, MEDIUM_DESCRIPTION, PROJECTS, SERVICES, SERVICE_SEO, SHORT_DESCRIPTION, SOLUTIONS, serviceSlug,
+  BRAND, COMMITMENTS, COMPANY, FOUNDER, INDUSTRIES, LIFECYCLE, MARKETS, MEDIUM_DESCRIPTION, PROJECTS, QUESTIONS, SERVICES, SERVICE_SEO, SHORT_DESCRIPTION, SOLUTIONS, serviceSlug,
 } from './src/site/content';
 import { BRAND_ALIASES, NOT_FOUND, ROUTES, SITE_URL, absolute, renderHead } from './src/site/seo';
+import { ARTICLES, plainText } from './src/site/resources';
 
 /**
  * Production-only: writes a static HTML file per route with its own <head> (title, description, canonical,
@@ -28,10 +29,35 @@ function lastContentChange(root: string) {
 function seoPages(): Plugin {
   let outDir = 'dist';
   let root = process.cwd();
+  // CSS and JS of the lazily loaded page chunks, read from the bundle graph in writeBundle. The prerendered HTML links
+  // them in <head> so the page is styled at first paint (otherwise pages.css arrives with the lazy chunk and the whole
+  // layout shifts: CLS ~0.7 measured) and hydration starts sooner (modulepreload instead of a request waterfall).
+  const chunkAssets: Record<'inner' | 'home', { css: string[]; js: string[] }> = { inner: { css: [], js: [] }, home: { css: [], js: [] } };
   return {
     name: 'primptech-seo-pages',
     apply: 'build',
     configResolved(config) { root = config.root; outDir = path.resolve(config.root, config.build.outDir); },
+    writeBundle(_options, bundle) {
+      const chunks = Object.values(bundle).filter((item): item is Extract<typeof item, { type: 'chunk' }> => item.type === 'chunk');
+      const byFile = new Map(chunks.map((chunk) => [chunk.fileName, chunk]));
+      const collect = (suffix: string) => {
+        const start = chunks.find((chunk) => chunk.facadeModuleId?.replace(/\\/g, '/').endsWith(suffix));
+        if (!start) throw new Error(`No chunk for ${suffix}`);
+        const js = new Set<string>();
+        const css = new Set<string>();
+        const visit = (fileName: string) => {
+          const chunk = byFile.get(fileName);
+          if (!chunk || chunk.isEntry || js.has(fileName)) return;
+          js.add(fileName);
+          (chunk as { viteMetadata?: { importedCss: Set<string> } }).viteMetadata?.importedCss.forEach((file) => css.add(file));
+          chunk.imports.forEach(visit);
+        };
+        visit(start.fileName);
+        return { css: [...css], js: [...js] };
+      };
+      chunkAssets.inner = collect('/src/site/pages/index.tsx');
+      chunkAssets.home = collect('/src/site/Site.tsx');
+    },
     async closeBundle() {
       const template = fs.readFileSync(path.join(outDir, 'index.html'), 'utf8');
       const marker = /<!--seo:head-->[\s\S]*?<!--\/seo:head-->/;
@@ -45,13 +71,24 @@ function seoPages(): Plugin {
 
       // Prerender each page's body with React, loaded through Vite's SSR module loader (same source as the client bundle).
       const { createServer } = await import('vite');
-      const ssr = await createServer({ root, logLevel: 'error', appType: 'custom', server: { middlewareMode: true, hmr: false, ws: false, watch: null } });
+      // Own cache dir and no browser dependency optimizing: this server runs with NODE_ENV=production, and sharing
+      // node_modules/.vite with `npm run dev` would put production React into the dev server's cache
+      // ("_jsxDEV is not a function" in the browser). SSR loads node_modules directly and needs no optimized deps.
+      const ssr = await createServer({
+        root, logLevel: 'error', appType: 'custom',
+        cacheDir: path.join(root, 'node_modules/.vite-prerender'),
+        optimizeDeps: { noDiscovery: true, include: [] },
+        server: { middlewareMode: true, hmr: false, ws: false, watch: null },
+      });
       try {
         const { render } = await ssr.ssrLoadModule('/src/entry-server.tsx') as { render: (path: string) => Promise<string> };
         for (const route of [...ROUTES, NOT_FOUND]) {
           const body = await render(route.path);
           if (!body.includes('<h1')) throw new Error(`Prerendered ${route.path} has no <h1>`);
-          const html = template.replace(marker, () => renderHead(route)).replace(rootDiv, () => `<div id="root">${body}</div>`);
+          const assets = route.path === '/' ? chunkAssets.home : chunkAssets.inner;
+          const links = [...assets.css.map((file) => `<link rel="stylesheet" href="/${file}" />`), ...assets.js.map((file) => `<link rel="modulepreload" href="/${file}" />`)].join('\n    ');
+          // After Vite's own entry CSS (end of <head>) so pages.css keeps overriding index.css exactly as before.
+          const html = template.replace(marker, () => renderHead(route)).replace('</head>', () => `  ${links}\n  </head>`).replace(rootDiv, () => `<div id="root">${body}</div>`);
           const file = route === NOT_FOUND ? path.join(outDir, '404.html') : route.path === '/' ? path.join(outDir, 'index.html') : path.join(outDir, route.path.slice(1), 'index.html');
           write(file, html);
         }
@@ -63,7 +100,7 @@ function seoPages(): Plugin {
       write(path.join(outDir, 'sitemap.xml'), [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-        ...ROUTES.map((route) => `  <url><loc>${absolute(route.path)}</loc><lastmod>${lastmod}</lastmod><changefreq>${route.changefreq}</changefreq><priority>${route.priority.toFixed(1)}</priority></url>`),
+        ...ROUTES.map((route) => `  <url><loc>${absolute(route.path)}</loc><lastmod>${route.lastmod ?? lastmod}</lastmod><changefreq>${route.changefreq}</changefreq><priority>${route.priority.toFixed(1)}</priority></url>`),
         '</urlset>',
         '',
       ].join('\n'));
@@ -98,6 +135,7 @@ function seoPages(): Plugin {
         `- Contact page: ${absolute('/contact')}`,
         ...(COMPANY.phone ? [`- Phone: ${COMPANY.phone}`] : []),
         ...(COMPANY.address ? [`- Address: ${COMPANY.address}`] : []),
+        `- Markets: ${MARKETS.join(', ')} (India is the primary market)`,
         ...COMPANY.socials.map((social) => `- ${social.label}: ${social.href}`),
         '',
         '## Services',
@@ -123,13 +161,65 @@ function seoPages(): Plugin {
         '## Main pages',
         ...section('Main'),
         '',
+        ...(ARTICLES.length ? ['## Guides', ...section('Resources'), ''] : []),
         '## Company pages',
         ...section('Company'),
         '',
         '## Optional',
         ...section('Legal'),
         `- [Sitemap](${SITE_URL}/sitemap.xml)`,
+        `- [Full text for AI assistants](${SITE_URL}/llms-full.txt): every service, FAQ and guide in plain text`,
         '',
+      ].join('\n'));
+
+      // llms-full.txt: the same facts plus the full text of service pages (scope, definitions, FAQs, comparisons) and guides.
+      const table = (caption: string, columns: readonly string[], rows: readonly (readonly string[])[]) =>
+        [`${caption}:`, `| ${columns.join(' | ')} |`, `| ${columns.map(() => '---').join(' | ')} |`, ...rows.map((row) => `| ${row.join(' | ')} |`)];
+      write(path.join(outDir, 'llms-full.txt'), [
+        `# ${BRAND}: full reference`,
+        '',
+        `> ${SHORT_DESCRIPTION}`,
+        '',
+        `Official website: ${absolute('/')}. Short version: ${SITE_URL}/llms.txt. Everything below is the text published on the website.`,
+        `Markets: ${MARKETS.join(', ')} (India is the primary market). Office: ${COMPANY.address || 'not published'}. Email: ${COMPANY.email}.`,
+        '',
+        ...SERVICES.flatMap((service, i) => {
+          const seo = SERVICE_SEO[i];
+          return [
+            `## ${service.title}`,
+            `URL: ${absolute(`/services/${serviceSlug(i)}`)}`,
+            '',
+            `${seo.question} ${seo.answer}`,
+            '',
+            ...service.groups.map((group) => `- ${group.heading}: ${group.items.join(', ')}`),
+            ...(service.note ? ['', `Note: ${service.note}`] : []),
+            ...(seo.compare ? ['', ...table(seo.compare.caption, seo.compare.columns, seo.compare.rows)] : []),
+            '',
+            'Frequently asked questions:',
+            ...seo.faqs.flatMap((faq) => [`Q: ${faq.q}`, `A: ${faq.a}`]),
+            '',
+          ];
+        }),
+        '## General questions',
+        ...QUESTIONS.flatMap((faq) => [`Q: ${faq.q}`, `A: ${faq.a}`]),
+        '',
+        ...ARTICLES.flatMap((article) => [
+          `## Guide: ${article.title}`,
+          `URL: ${absolute(`/resources/${article.slug}`)} (published ${article.published}, updated ${article.updated}, by ${BRAND})`,
+          '',
+          plainText(article.summary),
+          '',
+          ...article.sections.flatMap((section) => [
+            `### ${section.heading}`,
+            ...section.blocks.flatMap((block) => block.type === 'p' ? [plainText(block.text)]
+              : block.type === 'list' ? block.items.map((item, n) => `${block.ordered ? `${n + 1}.` : '-'} ${plainText(item)}`)
+              : table(block.caption, block.columns, block.rows)),
+            '',
+          ]),
+          'Frequently asked questions:',
+          ...article.faqs.flatMap((faq) => [`Q: ${faq.q}`, `A: ${faq.a}`]),
+          '',
+        ]),
       ].join('\n'));
 
       // Pre-compress text files so the server can send Brotli/gzip without compressing on every request.

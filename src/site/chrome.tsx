@@ -101,6 +101,7 @@ export function SiteFooter({ inner = false }: { inner?: boolean }) {
           <Link to="/process">Process</Link>
           <Link to="/services/artificial-intelligence-development">AI development</Link>
           <Link to="/services/intelligent-process-automation">Automation</Link>
+          <Link to="/resources">Guides</Link>
         </div>
         <div>
           <h2>Contact</h2>

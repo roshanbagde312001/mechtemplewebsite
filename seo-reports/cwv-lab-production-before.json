@@ -1,0 +1,66 @@
+{
+  "measuredAt": "2026-11-26T05:07:06.286Z",
+  "profile": "mobile, 4x CPU, 1.6 Mbps/150 ms",
+  "results": [
+    {
+      "url": "https://www.primptech.com/",
+      "runs": 3,
+      "lcpMs": 1228,
+      "cls": 0.018,
+      "fcpMs": 1228,
+      "ttfbMs": 64,
+      "tbtMs": 1373,
+      "lcpElement": "span.loader__count",
+      "transferKb": {
+        "Document": 18,
+        "Stylesheet": 13,
+        "Manifest": 1,
+        "Font": 110,
+        "Image": 779,
+        "Script": 280,
+        "Other": 11
+      },
+      "totalKb": 1211
+    },
+    {
+      "url": "https://www.primptech.com/services/website-development",
+      "runs": 3,
+      "lcpMs": 1200,
+      "cls": 0.709,
+      "fcpMs": 744,
+      "ttfbMs": 53,
+      "tbtMs": 0,
+      "lcpElement": "img",
+      "transferKb": {
+        "Document": 7,
+        "Stylesheet": 18,
+        "Manifest": 1,
+        "Image": 132,
+        "Font": 110,
+        "Script": 107,
+        "Other": 11
+      },
+      "totalKb": 386
+    },
+    {
+      "url": "https://www.primptech.com/contact",
+      "runs": 3,
+      "lcpMs": 2372,
+      "cls": 0.69,
+      "fcpMs": 744,
+      "ttfbMs": 53,
+      "tbtMs": 0,
+      "lcpElement": "img",
+      "transferKb": {
+        "Document": 7,
+        "Stylesheet": 18,
+        "Manifest": 1,
+        "Font": 110,
+        "Script": 107,
+        "Image": 187,
+        "Other": 11
+      },
+      "totalKb": 440
+    }
+  ]
+}

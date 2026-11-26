@@ -13,7 +13,7 @@ export interface RobotMaterials {
 }
 
 export function createRobotMaterials(isSoftwareGl: boolean): RobotMaterials {
-  // Ultra-glossy liquid obsidian armor matching the Korvantage reference image
+  // Ultra-glossy liquid obsidian armor matching the reference image
   const obsidianCarapace = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color(0x06070a),
     metalness: 0.94,

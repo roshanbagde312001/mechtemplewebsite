@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { ArrowUpRight, Briefcase, Building2, Factory, GraduationCap, Rocket, Store, Users } from 'lucide-react';
 import {
   AI_APPROACH, CAPABILITIES, CUSTOMERS_B2B, CUSTOMERS_B2C, INDUSTRIES, INDUSTRY_PHOTOS, LIFECYCLE, PAGE_IMAGES, PAGE_VIDEOS, PROJECTS, SERVICE_CATEGORY,
-  SERVICE_IMAGES, SERVICE_SEO, SERVICES, SOLUTION_IMAGES, SOLUTIONS, VIDEOS, WORKFLOW, serviceSlug, altFor,
+  SERVICE_COUNT, SERVICE_IMAGES, SERVICE_SEO, SERVICES, SOLUTION_IMAGES, SOLUTIONS, VIDEOS, WORKFLOW, serviceSlug, altFor,
 } from '../content';
 import { Link } from '../router';
 import { Pill, pad } from '../ui';
 import { Block, CtaBand, PageHero } from './Layout';
 import { Media, VideoBand } from './media';
 import { NotFoundPage } from './LegalPages';
+import { articlesForService } from '../resources';
 
 const INDUSTRY_ICONS = [Building2, GraduationCap, Store, Users, Briefcase, Factory, Rocket];
 
@@ -21,7 +22,7 @@ export function ServicesPage() {
         title={'Services built\naround your business.'}
         image={PAGE_IMAGES.services}
         video={PAGE_VIDEOS.services}
-        intro={<p>Twelve services across software engineering, AI, automation, data and infrastructure. Use one on its own, or combine them into a complete system. Every engagement starts with understanding the problem, not the technology.</p>}
+        intro={<p>{SERVICE_COUNT} services across software engineering, AI, automation, data and infrastructure. Use one on its own, or combine them into a complete system. Every engagement starts with understanding the problem, not the technology.</p>}
       >
         <Pill to="/contact">Discuss a project</Pill>
         <Pill to="/process" variant="ghost">How we work</Pill>
@@ -42,7 +43,7 @@ export function ServicesPage() {
         </ul>
       </Block>
 
-      <Block label="Service catalog" title={'Twelve services.\nBuilt to connect.'} lead={<p>Open any service for its full scope: what we build, what you receive and how we approach it.</p>}>
+      <Block label="Service catalog" title={`${SERVICE_COUNT} services.\nBuilt to connect.`} lead={<p>Open any service for its full scope: what we build, what you receive and how we approach it.</p>}>
         <ul className="link-grid">
           {SERVICES.map((service, i) => (
             <li key={service.title} data-rv style={{ '--d': `${(i % 3) * 60}ms` } as React.CSSProperties}>
@@ -84,6 +85,7 @@ export function ServiceDetailPage({ slug }: { slug: string }) {
   const related = SERVICES.map((s, i) => ({ s, i })).filter(({ i }) => i !== index && SERVICE_CATEGORY[i] === SERVICE_CATEGORY[index]);
   const fill = SERVICES.map((s, i) => ({ s, i })).filter(({ i }) => i !== index && !related.some((r) => r.i === i));
   const others = [...related, ...fill.slice(index, index + 3), ...fill].slice(0, 3);
+  const guides = articlesForService(index);
   const isAI = slug === 'artificial-intelligence-development';
   const isAutomation = slug === 'intelligent-process-automation';
 
@@ -116,6 +118,26 @@ export function ServiceDetailPage({ slug }: { slug: string }) {
           ))}
         </div>
         {service.note && <p className="note" data-rv>{service.note}</p>}
+      </Block>
+
+      {seo.compare && (
+        <Block label="Compared" title={seo.compare.caption}>
+          <div className="compare glass" data-rv>
+            <table>
+              <caption className="sr-only">{seo.compare.caption}</caption>
+              <thead><tr>{seo.compare.columns.map((column) => <th key={column} scope="col">{column}</th>)}</tr></thead>
+              <tbody>
+                {seo.compare.rows.map(([aspect, a, b]) => <tr key={aspect}><th scope="row">{aspect}</th><td>{a}</td><td>{b}</td></tr>)}
+              </tbody>
+            </table>
+          </div>
+        </Block>
+      )}
+
+      <Block label="Industries" title="Where this service is often used" lead={<p>{service.title} applies across sectors; these are the <Link to="/industries">industries we serve</Link> where it most often fits.</p>}>
+        <ul className="chips chips--links" data-rv>
+          {seo.industries.map((i) => <li key={INDUSTRIES[i]}><Link to="/industries">{INDUSTRIES[i]}</Link></li>)}
+        </ul>
       </Block>
 
       <Block className="fit">
@@ -172,6 +194,16 @@ export function ServiceDetailPage({ slug }: { slug: string }) {
                 <strong>{SOLUTIONS[i].title}</strong>
                 <span>{SOLUTIONS[i].description}</span>
                 <em>View solution <ArrowUpRight size={14} /></em>
+              </Link>
+            </li>
+          ))}
+          {guides.map((article) => (
+            <li key={article.slug} data-rv>
+              <Link className="link-card glass" to={`/resources/${article.slug}`}>
+                <small>Guide · {article.readingMinutes} min read</small>
+                <strong>{article.title}</strong>
+                <span>{article.summary}</span>
+                <em>Read the guide <ArrowUpRight size={14} /></em>
               </Link>
             </li>
           ))}

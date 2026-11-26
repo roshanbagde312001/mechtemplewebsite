@@ -5,7 +5,7 @@ import { Link } from './router';
 import { SiteFooter, SiteHeader, SiteMenu } from './chrome';
 import { Label, Pill, Rise, pad } from './ui';
 import {
-  AREAS, BRAND, BRAND_STATEMENT, CAPABILITIES, CUSTOMERS_B2B, CUSTOMERS_B2C, DIFFERENTIATORS, ECOSYSTEM, ENGAGEMENT, FACTS, FOUNDER, INDUSTRIES, INDUSTRY_PHOTOS, INTERSECTION, JOURNEY, JOURNEY_PHOTOS, LEAD_LINES, LEAD_STEPS, LIFECYCLE, LOGO, MARQUEE, MONOGRAM, OUTCOMES, PHILOSOPHY, PROBLEMS, PROJECTS, QUESTIONS, REEL, ROTATING_WORDS, SERVICES, SHORT_DESCRIPTION, SOLUTIONS, SUPPORTING, TAGLINE, WORKFLOW, serviceSlug, altFor,
+  AREAS, BRAND, BRAND_STATEMENT, CAPABILITIES, CUSTOMERS_B2B, CUSTOMERS_B2C, DIFFERENTIATORS, ECOSYSTEM, ENGAGEMENT, FACTS, FOUNDER, INDUSTRIES, INDUSTRY_PHOTOS, INTERSECTION, JOURNEY, JOURNEY_PHOTOS, LEAD_LINES, LEAD_STEPS, LIFECYCLE, LOGO, MARQUEE, MONOGRAM, OUTCOMES, PHILOSOPHY, PROBLEMS, PROJECTS, QUESTIONS, REEL, ROTATING_WORDS, SERVICES, SHORT_DESCRIPTION, SOLUTIONS, SUPPORTING, TAGLINE, WORKFLOW, SERVICE_COUNT, serviceSlug, altFor,
 } from './content';
 
 const INDUSTRY_ICONS = [Building2, GraduationCap, Store, Users, Briefcase, Factory, Rocket];
@@ -260,7 +260,7 @@ export function Site() {
       <main id="main">
         {/* Hero */}
         <section className="hero" id="top" data-hero aria-labelledby="hero-title">
-          <div className="hero__bg" aria-hidden="true"><img src="/assets/hero/hero-circuit.jpg" alt={altFor('/assets/hero/hero-circuit.jpg')} fetchPriority="high" /></div>
+          <div className="hero__bg" aria-hidden="true"><img src="/assets/hero/hero-circuit.jpg" srcSet="/assets/hero/hero-circuit-1200.webp 1200w, /assets/hero/hero-circuit.jpg 2400w" sizes="100vw" width={2400} height={1587} alt={altFor('/assets/hero/hero-circuit.jpg')} fetchPriority="high" /></div>
           <div className="hero__glow" data-hero-glow aria-hidden="true" />
           <div className="hero__copy">
             <h1 className="hero__title" id="hero-title" aria-label={TAGLINE}>
@@ -377,7 +377,7 @@ export function Site() {
           <div className="catalog__head">
             <div>
               <Label>Complete service catalog</Label>
-              <Rise text={'Twelve services.\nBuilt to connect.'} id="catalog-title" className="t-h1" />
+              <Rise text={`${SERVICE_COUNT} services.\nBuilt to connect.`} id="catalog-title" className="t-h1" />
             </div>
             <Pill variant="ghost" to="/services">All services</Pill>
           </div>

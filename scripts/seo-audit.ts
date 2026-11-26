@@ -128,6 +128,7 @@ async function crawl() {
   const pages: Page[] = [];
   const inbound = new Map<string, Set<string>>();
   const linkTargets = new Set<string>();
+  const anchors = new Map<string, Set<string>>();
 
   while (queue.length) {
     const url = queue.shift()!;
@@ -148,16 +149,19 @@ async function crawl() {
       const clean = withQuery.split('?')[0];
       if (!inbound.has(clean)) inbound.set(clean, new Set());
       inbound.get(clean)!.add(url);
+      if (!anchors.has(clean)) anchors.set(clean, new Set());
+      const anchorText = (page.html.match(new RegExp(`<a[^>]*href="${href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^>]*>([\\s\\S]*?)</a>`)) ?? [])[1];
+      if (anchorText) anchors.get(clean)!.add(stripTags(anchorText).slice(0, 60));
       if (!seen.has(clean) && !/\.[a-z0-9]{2,5}$/i.test(pathOf(clean))) queue.push(clean);
     }
   }
-  return { pages, sitemap, sitemapUrls, inbound, linkTargets };
+  return { pages, sitemap, sitemapUrls, inbound, linkTargets, anchors };
 }
 
 // ---------- Checks ----------
 async function main() {
   const started = new Date();
-  const { pages, sitemap, sitemapUrls, inbound, linkTargets } = await crawl();
+  const { pages, sitemap, sitemapUrls, inbound, linkTargets, anchors } = await crawl();
   const site: Result[] = [];
   const perPage = new Map<string, Result[]>();
   const add = (list: Result[], id: string, check: string, status: Status, evidence: string) => list.push({ id, check, status, evidence });
@@ -247,6 +251,42 @@ async function main() {
     for (const id of ['S23', 'S24', 'S25', 'S26']) add(site, id, 'Domain/HTTPS redirect and HSTS checks', 'NOT VERIFIED', 'Run with --live against production to verify');
   }
 
+  // Entity consistency: one brand spelling, one email, one website across schema, social tags, visible text and llms.txt.
+  const BRAND = arg('brand', 'PrimpTech');
+  const legacy = arg('legacy-names', 'Primptech,Korvantage,Preemptech').split(',').filter(Boolean);
+  const entityProblems: string[] = [];
+  const emails = new Set<string>();
+  for (const p of pages) {
+    for (const node of graphOf(p.schemas)) {
+      if (node['@type'] === 'Organization') {
+        if (node.name !== BRAND) entityProblems.push(`${p.url}: Organization name "${node.name}"`);
+        if (node.url !== `${ORIGIN}/`) entityProblems.push(`${p.url}: Organization url ${node.url}`);
+        if (node.email) emails.add(String(node.email));
+      }
+    }
+    const site = metaContent(headOf(p.html), 'property', 'og:site_name');
+    if (site !== BRAND) entityProblems.push(`${p.url}: og:site_name "${site}"`);
+    for (const name of legacy) if (new RegExp(`\\b${name}\\b`).test(p.text) || new RegExp(`\\b${name}\\b`).test(p.title)) entityProblems.push(`${p.url}: legacy name "${name}" in visible text`);
+  }
+  for (const m of pages.flatMap((p) => [...p.html.matchAll(/mailto:([^"?]+)/g)].map((x) => decode(x[1])))) emails.add(m);
+  if (emails.size > 1) entityProblems.push(`different emails: ${[...emails].join(', ')}`);
+  if (!llms.body.includes(`# ${BRAND}`)) entityProblems.push('llms.txt title does not match brand');
+  for (const email of emails) if (!llms.body.includes(email)) entityProblems.push(`llms.txt missing ${email}`);
+  add(site, 'S27', `Entity consistency (brand "${BRAND}", website, email) across schema, meta, text and llms.txt`, entityProblems.length ? 'FAIL' : 'PASS', entityProblems.slice(0, 8).join('; ') || `${pages.length} pages consistent; email ${[...emails].join(', ')}`);
+
+  const llmsFull = await get(`${BASE}/llms-full.txt`);
+  add(site, 'S28', 'llms-full.txt returns 200 and covers every service', llmsFull.status === 200 && pages.filter((p) => pathOf(p.url).startsWith('/services/')).every((p) => llmsFull.body.includes(p.url)) ? 'PASS' : 'FAIL', `HTTP ${llmsFull.status}, ${llmsFull.body.length} bytes`);
+
+  // External links: every http(s) link to another site must resolve (2xx/3xx). Redirects are fine for external sites.
+  const external = new Map<string, string>();
+  for (const p of pages) for (const href of p.links) if (/^https?:\/\//.test(href) && !href.startsWith(ORIGIN) && !href.startsWith(BASE)) external.set(decode(href), p.url);
+  const badExternal: string[] = [];
+  for (const [href, from] of external) {
+    const r = await get(href);
+    if (r.status === 0 || r.status >= 400) badExternal.push(`${href} (HTTP ${r.status}, on ${from})`);
+  }
+  add(site, 'S29', 'External links resolve', badExternal.length ? 'FAIL' : external.size ? 'PASS' : 'NOT APPLICABLE', badExternal.join('; ') || `${external.size} external links OK: ${[...external.keys()].join(', ')}`);
+
   // --- Per page ---
   const titles = new Map<string, string[]>();
   const descriptions = new Map<string, string[]>();
@@ -335,6 +375,14 @@ async function main() {
     const missingTypes = required.filter((t) => (t === 'WebPage' ? !webPageLike : !types.includes(t)));
     if (missingTypes.length) schemaProblems.push(`missing ${missingTypes.join(', ')}`);
     if (pathOf(p.url).startsWith('/services/') && !types.includes('Service')) schemaProblems.push('service page without Service schema');
+    if (/^\/resources\/[^/]+$/.test(pathOf(p.url))) {
+      const art = graph.find((n) => n['@type'] === 'Article');
+      if (!art) schemaProblems.push('guide without Article schema');
+      else {
+        for (const key of ['headline', 'datePublished', 'dateModified', 'author', 'publisher', 'image']) if (!art[key]) schemaProblems.push(`Article missing ${key}`);
+        if (art.datePublished && !p.html.includes(`dateTime="${art.datePublished}"`)) schemaProblems.push('Article datePublished not shown on the page');
+      }
+    }
     add(r, 'P19', 'Structured data valid JSON-LD, connected @ids, matches visible content', schemaProblems.length ? 'FAIL' : 'PASS', schemaProblems.join('; ') || types.join(', '));
     add(r, 'P19b', 'Rich result eligibility (Google Rich Results Test)', 'NOT VERIFIED', 'Requires Google\'s Rich Results Test / Search Console; this audit validates JSON syntax, @id graph and content parity only');
     const crumbNav = /<nav[^>]*aria-label="Breadcrumb"/i.test(p.html);
@@ -441,6 +489,46 @@ async function main() {
     ]),
   ].join('\n');
   fs.writeFileSync(path.join(OUT, 'SEO_VALIDATION_REPORT.md'), validation);
+
+  // Internal link report: click depth from the home page (breadth-first over crawled links), inbound links and anchors.
+  const depth = new Map<string, number>([[`${ORIGIN}/`, 0]]);
+  const bfs = [`${ORIGIN}/`];
+  while (bfs.length) {
+    const url = bfs.shift()!;
+    const page = pages.find((p) => p.url === url);
+    if (!page) continue;
+    for (const href of page.links) {
+      if (!href.startsWith('/')) continue;
+      const target = `${ORIGIN}${href.split('#')[0].split('?')[0]}`.replace(/(.)\/$/, '$1');
+      if (!depth.has(target) && pages.some((p) => p.url === target)) { depth.set(target, depth.get(url)! + 1); bfs.push(target); }
+    }
+  }
+  const linkRows = pages.map((p) => {
+    const linkedFrom = [...(inbound.get(p.url) ?? [])].filter((u) => u !== p.url);
+    const outgoing = new Set(p.links.filter((h) => h.startsWith('/')).map((h) => h.split('#')[0].split('?')[0]));
+    return { url: p.url, depth: depth.get(p.url), inbound: linkedFrom.length, outbound: outgoing.size, anchors: [...(anchors.get(p.url) ?? [])].filter(Boolean) };
+  });
+  const deep = linkRows.filter((r) => r.depth === undefined || r.depth > 3);
+  const weak = linkRows.filter((r) => r.url !== `${ORIGIN}/` && r.inbound < 3);
+  fs.writeFileSync(path.join(OUT, 'INTERNAL_LINK_REPORT.md'), [
+    '# Internal Link Report',
+    '',
+    `Generated by scripts/seo-audit.ts from the crawl of \`${BASE}\` at ${stamp}. Click depth is the fewest clicks from the home page, following crawlable <a href> links in the served HTML.`,
+    '',
+    '## Summary',
+    '',
+    `- Pages: ${pages.length}`,
+    `- Broken internal links: ${[...perPage.values()].flat().filter((r) => r.id === 'P15' && r.status === 'FAIL').length} pages with failures`,
+    `- Orphan pages (no inbound links): ${linkRows.filter((r) => r.url !== `${ORIGIN}/` && r.inbound === 0).length}`,
+    `- Pages deeper than 3 clicks: ${deep.length}${deep.length ? ` (${deep.map((r) => r.url).join(', ')})` : ''}`,
+    `- Pages with fewer than 3 inbound links: ${weak.length}${weak.length ? ` (${weak.map((r) => r.url).join(', ')})` : ''}`,
+    '',
+    '## Per page',
+    '',
+    '| Page | Click depth | Inbound (pages) | Outbound (unique) | Anchor texts used to link here |', '| --- | --- | --- | --- | --- |',
+    ...linkRows.sort((a, b) => (a.depth ?? 99) - (b.depth ?? 99) || b.inbound - a.inbound).map((r) => `| ${r.url} | ${r.depth ?? 'unreachable'} | ${r.inbound} | ${r.outbound} | ${md(r.anchors.slice(0, 6).join(' · ')) || '—'} |`),
+    '',
+  ].join('\n'));
 
   console.log(`SEO audit of ${BASE}: ${pages.length} pages, ${count('PASS')} PASS, ${count('FAIL')} FAIL, ${count('WARNING')} WARNING, ${count('NOT APPLICABLE')} N/A, ${count('NOT VERIFIED')} NOT VERIFIED -> ${score.toFixed(1)}%`);
   for (const { page, r } of issues.filter(({ r }) => r.status === 'FAIL')) console.log(`  FAIL ${page} ${r.id} ${r.check}: ${r.evidence}`);
